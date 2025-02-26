@@ -1,1 +1,1 @@
-#This is a quiz game build on MERN stack
+# This is a quiz game build on MERN stack
