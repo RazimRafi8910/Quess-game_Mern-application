@@ -12,8 +12,8 @@ function GameLobby() {
                   <div className="md:border border-t-2 border-neutral-700 bg-neutral-900/[0.4] rounded-md w-full md:w-1/2 mt-20 py-4">
                       <div className="flex justify-between px-3 mb-3">
                           <div>
-                              <h1 className="text-white">{lobbyId?.toUpperCase()}'s {" "} Lobby <span className="text-neutral-600">(i)</span></h1>
-                              <p className="text-sm text-neutral-500"> <span className="text-neutral-400">Link:</span> testing.com/game_id</p>
+                              <h1 className="text-white">{lobbyId?.toUpperCase()}'s {" "} Lobby</h1>
+                              <p className="text-sm text-neutral-500"> <span className="text-neutral-400">ID:</span>s3fjq3g34radom4id0k <span><i className="ms-1 text-neutral-700 fa-solid fa-copy"></i></span> </p>
                           </div>
                           <div>
                               <p className="m-0 text-neutral-500">3/6</p>

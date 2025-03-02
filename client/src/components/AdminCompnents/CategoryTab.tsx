@@ -2,12 +2,15 @@ import { useForm } from "react-hook-form";
 import useFetch from "../../Hooks/useFetch";
 import Loader from "../Loader";
 import { CategorysType } from "../../types";
+import DeleteModal from "../modal/DeleteModal";
+import { useState } from "react";
 
 type CategoryInputType = {
     categoryName:string
 }
 
 function CategoryTab() {
+    const [deleteModal, setDeleteModal] = useState(false);
     const { data: category, loading, error, refresh, getPostRequest,getFetch } = useFetch<CategorysType[]>('/admin/category');
     const { register, handleSubmit, formState: { errors } } = useForm<CategoryInputType>({
         defaultValues: {
@@ -29,6 +32,7 @@ function CategoryTab() {
         if (result?.success) {
             refresh();
         }
+        setDeleteModal(false);
     }
 
   return (
@@ -37,7 +41,6 @@ function CategoryTab() {
               <div className="text-center py-3">
                   <h2 className="text-3xl font-bold underline text-slate-200">Categorys</h2>
                   <p className="text-red-500">{error}</p>
-                  <p className="text-slate-300">TODO:Add modal for delete</p>
               </div>
               <div className="">
                 <form onSubmit={handleSubmit(createCategory)} className="w-full flex justify-center items-center">
@@ -87,10 +90,12 @@ function CategoryTab() {
                                   <td className="px-6 py-4">
                                       {item.totalQuestions}
                                   </td>
-                                  <td className="px-6 py-4">
-                                      <button className="bg-red-500 px-3 rounded-md text-white py-2" onClick={()=>handleDelete(item._id)}><i className="fa-solid fa-trash"></i></button>
-                                  </td>
-                              </tr>
+                                    <td className="px-6 py-4">
+                                        <button className="bg-red-500 px-3 rounded-md text-white py-2" onClick={() => { setDeleteModal(true) }}><i className="fa-solid fa-trash"></i></button>
+                                    </td>
+                                    <td><DeleteModal isOpen={deleteModal} toggle={setDeleteModal} id={item._id } handleDelete={handleDelete} message="Are you sure you want to delete this Category?,this action will delete realated questions of category" /></td>
+                                </tr>
+                                
                             ))
                         }
                       </tbody>

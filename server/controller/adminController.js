@@ -14,21 +14,15 @@ const AdminController = {
     },
 
     createQuestion: async (req, res, next) => {
-        const session = await mongoose.startSession();
-        session.startTransaction();
         try {
-
             const { question, options, answer, category } = req.body;
 
             if (!question || !options || !answer || !category) {
-                session.endSession()
                 return res.status(409).json({ message: "Invalid or missing inputs", success: false });
             }
 
             const questionCategory = await Category.findOneAndUpdate({ _id: category }, { $inc: { totalQuestions: 1 } });
             if (!questionCategory) {
-                await session.abortTransaction()
-                session.endSession()
                 return res.status(409).json({ message: "Invalid Category", success: false });
             }
 
@@ -42,18 +36,11 @@ const AdminController = {
             const newQuestion = await Question.create(questionData);
 
             if (!newQuestion) {
-                await session.abortTransaction()
-                session.endSession()
                 return res.status(500).json({ success: false, message: "Question not Created" });
             }
 
-            await session.commitTransaction();
-            session.endSession();
-
             return res.status(201).json({ success: true, message: "Question Created Successfully", data: newQuestion });
         } catch (error) {
-            await session.abortTransaction()
-            session.endSession()
             console.error('[Question create error]'+error.message);
             next(error);
         }
@@ -61,13 +48,31 @@ const AdminController = {
 
     deleteQuestion: async (req, res, next) => {
         try {
-
             const question_id = req.params.question_id;
             
-
-            if (true) {
-                return res.status(501).json({ success: false, message: "Function not ready for service" });
+            if (!question_id) {
+                session.endSession()
+                return res.status(409).json({ message: "Question ID is missing", success: false });
             }
+
+            const questionDelete = await Question.findByIdAndDelete({ _id: question_id });
+
+            if (!questionDelete) {
+                return res.status(500).json({ message: "Qeustion not deleted ", success: false, });
+            }
+            
+            if (questionDelete.category) {
+                const questionCategoryUpdate = await Category.updateOne(
+                    { categoryName: questionDelete.category },
+                    { $inc: { totalQuestions: -1 } }
+                );
+                
+                if (questionCategoryUpdate.modifiedCount == 0) {
+                    return res.status(500).json({ message: "Question category not updated", success: false, });
+                }
+            }
+
+            return res.status(200).json({ message: "Question deleted", success: false, });
         } catch (error) {
             console.error('[Question delete error]'+error.message);
             next(error)
@@ -94,7 +99,7 @@ const AdminController = {
 
             return res.status(200).json({ message: "category created succesfully",success: true, data:newCategory });
         } catch (error) {
-            console.error("[Category Creation Error]:",error.message)
+            console.error("[Category Creation Error]:", error.message)
             if (error.code === 11000) {  // MongoDB duplicate key error code
                 return res.status(409).json({ success: false, message: "Category already exists." });
             }
@@ -113,33 +118,24 @@ const AdminController = {
     },
 
     deleteCategory: async (req, res, next) => {
-        const session = await mongoose.startSession();
-        session.startTransaction();
         try {
             const categoryId = req.params.category_id;
             
             if (!categoryId) {
-                session.endSession()
                 return res.status(409).json({ message: "Bad request", success: false });
             }
 
-            const result = await Category.findOneAndDelete({ _id: categoryId });
+            const result = await Category.findOneAndDelete({ _id: categoryId })
                         
             if (!result) {
-                await session.abortTransaction();
-                session.endSession();
                 return res.status(409).json({ message: "Category not found", success: false });
             }
 
             const deletedQuestion = await Question.deleteMany({ category: result.categoryName });
 
-            console.log(deletedQuestion);
-            
             return res.status(200).json({ message: "Category deleted", success: true });
 
         } catch (error) {
-            await session.abortTransaction();
-            session.endSession();
             console.error('[Category delete Error]', error.message);
             next(error)
         }
