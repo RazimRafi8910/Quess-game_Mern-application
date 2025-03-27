@@ -4,6 +4,7 @@ import { useForm,SubmitHandler } from 'react-hook-form';
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from 'yup';
 import { useNavigate } from "react-router-dom";
+import useFetch from "../../Hooks/useFetch";
 
 interface ModalProps {
   isOpen: boolean;
@@ -41,6 +42,8 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
+  const { getFetch } = useFetch('', false);
+
   const { handleSubmit, register, reset, formState: { errors } } = useForm<RoomTypes>({
     resolver: yupResolver(InputSchema),
     defaultValues: {
@@ -73,10 +76,19 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
     };
   }, [isOpen]);
 
-  const onCreate: SubmitHandler<RoomTypes> = (data) => {
-    reset();
-    console.log(data)
-    navigate(`/lobby/${data.roomName}`)
+  const onCreate: SubmitHandler<RoomTypes> = async (data) => {
+    
+    const requestData = {
+      ...data,
+      hostName: window.localStorage.getItem('username'),
+    }
+
+    //create game request to backend
+    const result = await getFetch({ url: '/game/create', method: "POST", body: requestData });
+    if (result !== undefined && result.success) {
+      reset();
+      navigate(`/lobby/${data.roomName}`)
+    }
   }
 
   if (!isOpen) {

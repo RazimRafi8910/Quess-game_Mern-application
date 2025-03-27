@@ -25,3 +25,13 @@ export type CategorysType = {
     totalQuestions: number
     _id:string
 }
+
+
+export type GameRoomType = {
+    category: string
+    host: string
+    gameId: string
+    state: string
+    players: string[]
+    gameName:string
+}

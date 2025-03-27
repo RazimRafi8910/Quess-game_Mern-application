@@ -33,7 +33,7 @@ function App() {
     <>
       <div className="app bg-gradient-to-t from-slate-950 from-50% to-emerald-950 to-90% min-h-screen">
         <Navbar />
-        { renderCount && <p className='text-white'>render : { renderCount.current }</p>}
+        { renderCount  && <p className='text-white'>render : { renderCount.current }</p>}
           <ToastContainer/>
           <Routes>
             <Route path='/' element={ <Home/> } />

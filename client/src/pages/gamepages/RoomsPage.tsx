@@ -1,10 +1,58 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import RoomsDiv from "../../components/GameMenuComps/RoomsDiv";
 import CreateGameModal from "../../components/modal/CreateGameModal";
+import useFetch from "../../Hooks/useFetch";
+import { GameRoomType } from "../../types";
+import { io } from "socket.io-client";
+import Loader from "../../components/Loader";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store/store";
+import { toast } from "react-toastify";
+
+const socket = io('http://localhost:3001', { autoConnect: false, withCredentials: true });
 
 function RoomsPage() {
   const searchRef = useRef<HTMLInputElement>(null);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const { error, data, loading } = useFetch<[GameRoomType]>('/game/rooms');
+  const [currentUsers, setCurrentUsers] = useState(0);
+  const userDetails = useSelector((state: RootState) => state.userReducer.user);
+  const [currentLobby, setCurrentLobby] = useState<GameRoomType[] | null>(null);
+
+  useEffect(() => {
+    if (data !== null) {
+      console.log(data)
+      setCurrentLobby(data);
+    }
+  },[data])
+  
+  useEffect(() => {
+    //socket auth
+    socket.auth = {
+      username: userDetails?.username,
+      id:userDetails?.id
+     };
+    socket.connect();
+    socket.on('current-lobby', (data) => { 
+      setCurrentUsers(data.players)
+    });
+
+    socket.on('game-created', (newLobby) => {
+      console.log(newLobby)
+      setCurrentLobby(newLobby);
+    });
+
+    socket.on('socket-error', (err) => {
+      console.log(err)
+      toast.error(err.message);
+    });
+
+    return () => { 
+      socket.disconnect();
+      console.log("user disconneted");
+     }
+  }, [])
+  
 
   const handleSearch = () => {
     if (searchRef?.current?.value == '') {
@@ -18,6 +66,7 @@ function RoomsPage() {
         <CreateGameModal isOpen={modalOpen} setModal={setModalOpen}/>
         <div className="flex justify-center h-full">
           <div className="md:border border-t-2 border-neutral-700 bg-neutral-900/[0.4] rounded-md w-full md:w-1/2 mt-20 py-4">
+            <p className="text-gray-300 m-0">{ currentUsers }</p>
             <div className="flex my-3 w-full gap-2 px-6">
               <div className="md:w-1/2 w-full">
                 <input
@@ -49,10 +98,16 @@ function RoomsPage() {
               </div>
             </div>
             <hr className="border-neutral-600" />
+            {loading && <Loader />}
+            <p className="text-red-500">{ error }</p>
             <div className="flex-row px-6 py-2">
-              <RoomsDiv roomName="Room Name 1" players={2} category="Programming" />
-              <RoomsDiv roomName="Room Name 2" players={4} category="IT" />
-              <RoomsDiv roomName="Room Name 3" players={3} category="General" />
+              {loading == false && currentLobby && currentLobby.length > 0 ? 
+                currentLobby.map((room) => (
+                  <RoomsDiv key={room.gameId} roomName={room.gameName} players={ room.players.length } category={room.category} />
+                ))
+                :
+                <p className="text-neutral-300 text-center">No rooms found</p>
+               }
             </div>
           </div>
         </div>

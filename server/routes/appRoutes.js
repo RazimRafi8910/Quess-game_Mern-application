@@ -10,6 +10,6 @@ router.post('/login', login)
 router.get('/user/refresh', refreshJWTToken)
 router.get('/protected', verifyUser)
 router.get('/user',verifyUser, getUserDetails)
-router.post('/user/logout',verifyUser, logout)
+router.post('/user/logout', verifyUser, logout)
 
 export default router
