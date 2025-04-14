@@ -80,7 +80,7 @@ function Signup() {
                         <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
                             Create your account
                         </h2>
-                        <p className="text-red-600 text-center text-sm md:text-lg">{ error }</p>
+                        <p className="text-red-600 text-center text-sm md:text-base">{ error }</p>
                     </div>
 
                     <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">

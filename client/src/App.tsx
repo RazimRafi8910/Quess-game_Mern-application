@@ -13,6 +13,7 @@ import AuthProtect from './components/AuthProtect';
 import RoomsPage from './pages/gamepages/RoomsPage';
 import GameLobby from './pages/gamepages/GameLobby';
 import { useRef } from 'react';
+import SocketProvider from './components/SocketProvider';
 
 function App() {
   const { loading } = useAuth();
@@ -40,9 +41,11 @@ function App() {
             <Route path='/login' element={ <Login/> } />
             <Route path='/register' element={ <Signup/> } />
             <Route path='/admin' element={ <Admin/> } />
-            <Route path='/game' element={<AuthProtect><Game /></AuthProtect>} />
-            <Route path='/room' element={<AuthProtect><RoomsPage /></AuthProtect>} />
-            <Route path='/lobby/:id' element={<AuthProtect><GameLobby/></AuthProtect>} />
+            <Route element={ <SocketProvider/> }>
+              <Route path='/game' element={<AuthProtect><Game /></AuthProtect>} />
+              <Route path='/room' element={<AuthProtect><RoomsPage /></AuthProtect>} />
+              <Route path='/lobby/:id' element={<AuthProtect><GameLobby/></AuthProtect>} />
+            </Route>
           </Routes>
       </div>
     </>

@@ -2,6 +2,7 @@ import { getGameLobby } from "../socket/socketManager.js";
 
 export const createGame = (req, res, next) => {
     try {
+        const user = req.user;
         const { roomName, noPlayers, password, category, hostName } = req.body;
 
         if (!roomName || !hostName || !noPlayers || !category) {
@@ -12,7 +13,7 @@ export const createGame = (req, res, next) => {
 
         const gameLobby = getGameLobby(req);
 
-        const result = gameLobby.createGame(hostName, category,roomName);
+        const result = gameLobby.createGame(hostName, category, roomName, user.user_id);
 
         if (!result) {
             return res.status(500).json({ success: false, message: "game not created" });

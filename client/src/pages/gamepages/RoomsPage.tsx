@@ -3,56 +3,41 @@ import RoomsDiv from "../../components/GameMenuComps/RoomsDiv";
 import CreateGameModal from "../../components/modal/CreateGameModal";
 import useFetch from "../../Hooks/useFetch";
 import { GameRoomType } from "../../types";
-import { io } from "socket.io-client";
 import Loader from "../../components/Loader";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
-import { toast } from "react-toastify";
+import { useOutletContext } from "react-router-dom";
+import { Socket } from "socket.io-client";
 
-const socket = io('http://localhost:3001', { autoConnect: false, withCredentials: true });
+//const socket = io('http://localhost:3001', { autoConnect: false, withCredentials: true });
 
 function RoomsPage() {
   const searchRef = useRef<HTMLInputElement>(null);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [totalPlayers, setTotalPlayers] = useState(0);
   const { error, data, loading } = useFetch<[GameRoomType]>('/game/rooms');
-  const [currentUsers, setCurrentUsers] = useState(0);
-  const userDetails = useSelector((state: RootState) => state.userReducer.user);
   const [currentLobby, setCurrentLobby] = useState<GameRoomType[] | null>(null);
+  const socket = useOutletContext<Socket | null>()
 
   useEffect(() => {
     if (data !== null) {
       console.log(data)
       setCurrentLobby(data);
     }
-  },[data])
-  
+  }, [data]);
+
   useEffect(() => {
-    //socket auth
-    socket.auth = {
-      username: userDetails?.username,
-      id:userDetails?.id
-     };
-    socket.connect();
-    socket.on('current-lobby', (data) => { 
-      setCurrentUsers(data.players)
-    });
 
-    socket.on('game-created', (newLobby) => {
-      console.log(newLobby)
-      setCurrentLobby(newLobby);
-    });
+    const handleCurrentLobby = (data: any) => {
+      console.log("emited",data.players);
+      setTotalPlayers(data.players);
+    }
+    
+    socket?.on('current-lobby', handleCurrentLobby);
 
-    socket.on('socket-error', (err) => {
-      console.log(err)
-      toast.error(err.message);
-    });
+    return () => {
+      socket?.off('current-lobby', handleCurrentLobby);
+    }
 
-    return () => { 
-      socket.disconnect();
-      console.log("user disconneted");
-     }
-  }, [])
-  
+  },[])
 
   const handleSearch = () => {
     if (searchRef?.current?.value == '') {
@@ -66,7 +51,7 @@ function RoomsPage() {
         <CreateGameModal isOpen={modalOpen} setModal={setModalOpen}/>
         <div className="flex justify-center h-full">
           <div className="md:border border-t-2 border-neutral-700 bg-neutral-900/[0.4] rounded-md w-full md:w-1/2 mt-20 py-4">
-            <p className="text-gray-300 m-0">{ currentUsers }</p>
+            <p className="text-gray-300 ms-3">online: { totalPlayers }</p>
             <div className="flex my-3 w-full gap-2 px-6">
               <div className="md:w-1/2 w-full">
                 <input

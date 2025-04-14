@@ -50,7 +50,7 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
       roomName: '',
       noPlayers: 2,
       password: '',
-      category:''
+      category: '',
     },
     context:{showPassword},
     mode:'onBlur'
@@ -77,7 +77,6 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
   }, [isOpen]);
 
   const onCreate: SubmitHandler<RoomTypes> = async (data) => {
-    
     const requestData = {
       ...data,
       hostName: window.localStorage.getItem('username'),
@@ -92,7 +91,6 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
   }
 
   if (!isOpen) {
-    console.log("cal");
     return null;
   }
 

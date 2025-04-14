@@ -1,12 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AdminTabs from "../components/AdminCompnents/adminTabs";
 import QuestionDiv from "../components/AdminCompnents/QuestionDiv";
 import QuestionForm from "../components/AdminCompnents/QuestionForm";
 import { motion, AnimatePresence } from 'framer-motion'
 import CategoryTab from "../components/AdminCompnents/CategoryTab";
+import { useSelector } from "react-redux";
+import { RootState } from "../store/store";
+import { useNavigate } from "react-router-dom";
 
 function Admin() {
   const [currentTab, setCurrentTab] = useState<number>(0);
+  const userDetails = useSelector((state: RootState) => state.userReducer);
+  const naviage = useNavigate()
+
+  useEffect(() => {
+    if (!userDetails.logined) {
+      naviage('/login');
+    }
+  },[])
 
   const renderCurrentTab = (tab: number)=>{
     switch (tab) {

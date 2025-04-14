@@ -10,7 +10,6 @@ import jwt from 'jsonwebtoken';
 export const initializeSocket = (io, gameLobby) => {
     io.on('connection', (socket) => {
         try {
-            gameLobby.addPlayer();
 
             const cookie = socket.handshake.headers.cookie;
             const token = cookie.split('=')[1];
@@ -19,26 +18,29 @@ export const initializeSocket = (io, gameLobby) => {
                 throw new Error("Un-authorized handshake. Token is missing")
             }
 
-            socket.join(socket.handshake.auth.id);
+            //socket.join(socket.handshake.auth.id);
 
             const player = jwt.verify(token, process.env.JWT_KEY);
 
             socket.player = player;
+            gameLobby.addPlayer(socket.player, socket.id);
 
             //TODO:find player from db using handshake auth id if player is undefined
 
             
             //development code
-            console.log(gameLobby.players)
+            console.log(gameLobby.players.size);
             console.log(socket.handshake.auth);
-            socket.emit('current-lobby', { players: gameLobby.players })
-            
+            io.emit('current-lobby', { players: gameLobby.players.size });
 
             socket.on('disconnect', () => {
-                gameLobby.removePlayer();
+                gameLobby.removePlayer(socket.player.user_id);
                 socket.leave()
                 console.log('disconnected');
+                io.emit('current-lobby', { players: gameLobby.players.size });
             });
+
+
         } catch (error) {
             console.error(error);
             socket.emit('socket-error', error.message || "something went wrong with socket connection");
@@ -46,7 +48,7 @@ export const initializeSocket = (io, gameLobby) => {
     });
 }
 
-
+// function to get current lobby state
 export function getGameLobby(req) {
     return req.app.get('lobby');
 }

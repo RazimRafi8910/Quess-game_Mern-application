@@ -5,7 +5,7 @@ function TimerSection() {
     const [timer, setTimer] = useState();
     return (
         <>
-            <div className="flex justify-between mx-10 mb-5 text-white">
+            <div className="flex justify-between mb-5 text-white">
                 <div>
                     <p className="mt-1 mb-1 text-gray-300">Q-2/3</p>
                 </div>

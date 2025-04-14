@@ -15,7 +15,7 @@ function AuthProtect({ children }: AuthLayoutProps) {
   useEffect(() => {
     if (!loading) {
       if (user?.logined == false) {
-        navigate("/");
+        navigate("/login");
       } else if (user?.logined == true) {
         return;
       }

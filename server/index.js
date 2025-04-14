@@ -9,6 +9,7 @@ import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 import errorHandler from './middleware/errorHandler.js'
 import morgan from 'morgan'
+import { rateLimit } from 'express-rate-limit'
 import { createServer } from 'http'
 import { Lobby } from './game/Lobby.js'
 import { Server } from 'socket.io'
@@ -25,9 +26,16 @@ const io = new Server(httpServer, {
     }
 });
 
+const limiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    limit: 60,
+    message: "too many request from this IP"
+});
+
 app.use(express.json())
 app.use(cookieParser())
-app.use(helmet())
+app.use(helmet());
+app.use(limiter);
 app.use(morgan(':remote-addr [:date[web]] :remote-user :method :url :status :response-time ms',))
 // app.use(express.urlencoded({extended:true}))
 app.use(cors({
