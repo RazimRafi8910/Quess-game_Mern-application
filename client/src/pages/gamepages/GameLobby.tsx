@@ -1,9 +1,24 @@
-import { useParams } from "react-router-dom"
+import { useOutletContext, useParams } from "react-router-dom"
 import UserCard from "../../components/GameMenuComps/UserCard"
 import { useNavigate } from "react-router-dom"
+import { useEffect } from "react"
+import { Socket } from "socket.io-client"
+import { SocketEvents } from "../../types"
+import { useSelector } from "react-redux"
+import { RootState } from "../../store/store"
 
 function GameLobby() {
     const { id: lobbyId } = useParams()
+    const gameState = useSelector((state: RootState) => state.gameReducer);
+    const socket = useOutletContext<Socket | null>()
+
+    useEffect(() => {
+        const responseCallback = (response: any) => {
+            console.log(response)
+        }
+        socket?.emit(SocketEvents.JOIN_ROOM, { gameId: lobbyId, playerId: gameState.playerId },responseCallback);
+    },[])
+
     const navigate = useNavigate()
   return (
       <>

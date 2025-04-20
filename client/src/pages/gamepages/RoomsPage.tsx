@@ -2,12 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import RoomsDiv from "../../components/GameMenuComps/RoomsDiv";
 import CreateGameModal from "../../components/modal/CreateGameModal";
 import useFetch from "../../Hooks/useFetch";
-import { GameRoomType } from "../../types";
+import { GameRoomType, ServerSocketEvnets } from "../../types";
 import Loader from "../../components/Loader";
 import { useOutletContext } from "react-router-dom";
 import { Socket } from "socket.io-client";
-
-//const socket = io('http://localhost:3001', { autoConnect: false, withCredentials: true });
 
 function RoomsPage() {
   const searchRef = useRef<HTMLInputElement>(null);
@@ -19,7 +17,6 @@ function RoomsPage() {
 
   useEffect(() => {
     if (data !== null) {
-      console.log(data)
       setCurrentLobby(data);
     }
   }, [data]);
@@ -30,20 +27,36 @@ function RoomsPage() {
       console.log("emited",data.players);
       setTotalPlayers(data.players);
     }
+
+    const handleGameCreated = (data: any) => {
+      console.log("game emit", data);
+      setCurrentLobby(data.data)
+    }
     
-    socket?.on('current-lobby', handleCurrentLobby);
+    socket?.on(ServerSocketEvnets.LOBBY_PLAYER_UPDATE, handleCurrentLobby);
+
+    socket?.on(ServerSocketEvnets.LOBBY_ROOM_UPDATE,handleGameCreated)
 
     return () => {
-      socket?.off('current-lobby', handleCurrentLobby);
+      socket?.off(ServerSocketEvnets.LOBBY_PLAYER_UPDATE, handleCurrentLobby);
+      socket?.off(ServerSocketEvnets.LOBBY_ROOM_UPDATE, handleGameCreated);
     }
 
-  },[])
+  },[socket])
 
   const handleSearch = () => {
     if (searchRef?.current?.value == '') {
       searchRef.current.focus();
     } 
   };
+
+  if (!socket || !socket.connected) {
+    return (
+      <>
+        <Loader />
+      </>
+    )
+  }
 
   return (
     <>

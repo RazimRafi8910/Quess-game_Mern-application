@@ -5,10 +5,18 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from 'yup';
 import { useNavigate } from "react-router-dom";
 import useFetch from "../../Hooks/useFetch";
+import { getLocalStorageItem } from "../../utils/localStateManager";
+import { useDispatch } from "react-redux";
+import { setGameState } from "../../store/slice/gameSlice";
 
 interface ModalProps {
   isOpen: boolean;
   setModal: (val: boolean) => void;
+}
+
+type GameStateResponce = {
+  gameId: string
+  playerId:string
 }
 
 interface FormContextValue {
@@ -41,6 +49,7 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const dispatch = useDispatch()
 
   const { getFetch } = useFetch('', false);
 
@@ -49,7 +58,7 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
     defaultValues: {
       roomName: '',
       noPlayers: 2,
-      password: '',
+      password: null,
       category: '',
     },
     context:{showPassword},
@@ -79,14 +88,18 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
   const onCreate: SubmitHandler<RoomTypes> = async (data) => {
     const requestData = {
       ...data,
-      hostName: window.localStorage.getItem('username'),
+      havePassword:showPassword,
+      hostName: getLocalStorageItem<string>('username'),
     }
-
+    
     //create game request to backend
-    const result = await getFetch({ url: '/game/create', method: "POST", body: requestData });
+    const result = await getFetch<GameStateResponce>({ url: '/game/create', method: "POST", body: requestData });
     if (result !== undefined && result.success) {
       reset();
-      navigate(`/lobby/${data.roomName}`)
+      console.log(result.data)
+      dispatch(setGameState(result.data?.gameId));
+      
+      navigate(`/lobby/${result.data?.gameId}`)
     }
   }
 

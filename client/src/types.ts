@@ -6,6 +6,17 @@ enum Options {
     D = 'D'
 }
 
+export enum ServerSocketEvnets {
+    LOBBY_PLAYER_UPDATE = 'current_players',
+    LOBBY_ROOM_UPDATE = 'current_rooms'
+}
+
+export enum SocketEvents {
+    CONNECTION = '',
+    DISCONNECT = '',
+    JOIN_ROOM = 'join_room'
+}
+
 export type QuestionOptionType = {
     option: Options
     optionValue: string 

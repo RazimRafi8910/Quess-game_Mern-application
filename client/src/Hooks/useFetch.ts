@@ -3,10 +3,10 @@ import getBackendURL from "../utils/getBackend";
 import getHttpErrorMessage from "../utils/getHttpErrorMessage";
 import { toast } from "react-toastify";
 
-interface ResponseType {
+interface ResponseType<T = unknown> {
   success: boolean,
   message?: string,
-  data?:unknown
+  data?:T
 }
 
 type GetFetchParamsType = {
@@ -22,7 +22,7 @@ type ReturnData<T> = {
   error: string | null
   refresh: () => void
   getPostRequest: <D>(url: string, data: D) => Promise<ResponseType | undefined>
-  getFetch:({url,method,body,headers}:GetFetchParamsType)=>Promise<ResponseType | undefined>
+  getFetch:<T>({url,method,body,headers}:GetFetchParamsType)=>Promise<ResponseType<T> | undefined>
 };
 
 const backEndUrl = getBackendURL();
@@ -98,7 +98,7 @@ export default function useFetch<T = unknown>(url?:string | null,autoFetch = tru
     }
   }
 
-  const getFetch = async ({url,method = 'GET',body,headers = {}}:GetFetchParamsType) => {
+  const getFetch = async<T = unknown>({ url, method = 'GET', body, headers = {} }: GetFetchParamsType): Promise<ResponseType<T> | undefined> => {
     setLoading(true);
     setError(null)
     try {
@@ -127,8 +127,8 @@ export default function useFetch<T = unknown>(url?:string | null,autoFetch = tru
       }
 
       if (result.success) {
-        toast.success(result.message);
-        return result as ResponseType;
+        toast.success(result.message,{autoClose:1000});
+        return result as ResponseType<T>;
       } else {
         throw new Error(result?.message || "Unknown Error Occured");
       }

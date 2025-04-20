@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { loginUser,UserState } from "../store/slice/userSlice"
 import getHttpErrorMessage from "../utils/getHttpErrorMessage";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,7 +17,6 @@ export default function useAuth() : AuthReturn {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>('');
     const dispatch = useDispatch();
-    const hasFetch = useRef(false);
 
     const getUserData = async () => {
         setLoading(true);
@@ -61,8 +60,7 @@ export default function useAuth() : AuthReturn {
 
     useEffect(() => {
         const userExists = window.localStorage.getItem('username');
-        if (userState.logined == false && userExists && !hasFetch.current) {
-            hasFetch.current = true;
+        if (userState.logined == false && userExists) {
             getUserData()
         } else {
             setLoading(false)

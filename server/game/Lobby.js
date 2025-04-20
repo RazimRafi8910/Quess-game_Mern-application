@@ -1,4 +1,5 @@
 import { Game } from "./Game.js";
+import { ServerSocketEvents } from '../utils/constants.js'
 
 export class Lobby {
     constructor(io) {
@@ -16,11 +17,11 @@ export class Lobby {
         this.players.delete(playerId);
     }
 
-    createGame(hostname,category,gameName,userId) {
-        const newGame = new Game(hostname, category, gameName)
+    createGame(hostname,category,gameName,password,userId) {
+        const newGame = new Game(hostname, category, gameName,password)
         const player = this.players.get(userId);
         this.rooms.set(newGame.gameId, newGame);
-        this.io.emit('game-created', this.getAllGameRooms());
+        this.io.emit(ServerSocketEvents.LOBBY_ROOM_UPDATE, {data: this.getAllGameRooms()});
         //player joins the new socket room
         this.io.sockets.sockets.get(player.socketId).join(newGame.gameId);
         return newGame;
@@ -30,4 +31,12 @@ export class Lobby {
         const currentRooms = [...this.rooms.values()]
         return currentRooms
     }
+
+    getGameState(gameId) {
+        if (this.rooms.has(gameId)) {
+            return this.rooms.get(gameId);
+        } 
+        return null;
+    }
+    
 }

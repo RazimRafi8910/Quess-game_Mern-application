@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import OptionDIv from "../../components/GameComponents/OptionDIv";
 import TimerSection from "../../components/GameComponents/TimerSection";
-import { io } from "socket.io-client";
 import ChatBox from "../../components/ChatComponents/ChatBox";
-
-//const socket = io('http://localhost:3001');
 
 function Game() {
   const [selected, setSelected] = useState<null | string>(null);
@@ -18,10 +15,7 @@ function Game() {
   }
 
   useEffect(() => {
-    // socket.on('connect', () => {
-    //   console.log('df');
-    //   socket.on('message',()=>{console.log('sdf')})
-    // })    
+       
   },[])
 
   return (

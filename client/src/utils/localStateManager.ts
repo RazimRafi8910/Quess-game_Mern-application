@@ -10,6 +10,24 @@ export function setUserLocalStorage(user : UserData) {
     }
 }
 
+export function setLocalStorageItem(key:string,data:any) {
+    try {
+        window.localStorage.setItem(key, data);
+    } catch (error) {
+        console.log(error)
+        return false
+    }
+}
+
+export function getLocalStorageItem<T>(key: string): T | null{
+    try {
+        return window.localStorage.getItem(key) as T;
+    } catch (error) {
+        console.log(error)
+        return null
+    }
+}
+
 export function removeUserLocalStorage(): boolean {
     try {
         window.localStorage.removeItem('username');

@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
-
+import { ServerSocketEvents } from '../utils/constants.js';
+import { handleSocketGameEvent } from './gameManager.js'
 /**
  * 
  * @param {Server<import("socket.io/dist/typed-events").DefaultEventsMap, import("socket.io/dist/typed-events").DefaultEventsMap, import("socket.io/dist/typed-events").DefaultEventsMap, any>} io 
@@ -31,13 +32,16 @@ export const initializeSocket = (io, gameLobby) => {
             //development code
             console.log(gameLobby.players.size);
             console.log(socket.handshake.auth);
-            io.emit('current-lobby', { players: gameLobby.players.size });
 
+            io.emit(ServerSocketEvents.LOBBY_PLAYER_UPDATE, { players: gameLobby.players.size });
+
+            handleSocketGameEvent(io,socket,gameLobby)
+            
             socket.on('disconnect', () => {
                 gameLobby.removePlayer(socket.player.user_id);
                 socket.leave()
                 console.log('disconnected');
-                io.emit('current-lobby', { players: gameLobby.players.size });
+                io.emit(ServerSocketEvents.LOBBY_PLAYER_UPDATE, { players: gameLobby.players.size });
             });
 
 
