@@ -18,8 +18,11 @@ export const createGame = (req, res, next) => {
         }
 
         const gameLobby = getGameLobby(req);
-
-        const newGame = gameLobby.createGame(hostName, category, roomName, password,user.user_id);
+        const gameHost = {
+            username: hostName,
+            user_id:user.user_id
+        }
+        const newGame = gameLobby.createGame(gameHost, category, roomName, password, noPlayers,user.user_id);
 
         if (!newGame) {
             return res.status(500).json({ success: false, message: "game not created" });

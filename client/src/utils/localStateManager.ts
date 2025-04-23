@@ -28,6 +28,16 @@ export function getLocalStorageItem<T>(key: string): T | null{
     }
 }
 
+export function removeLocalStorageItem(key:string): boolean{
+    try {
+        window.localStorage.removeItem(key)
+        return true
+    } catch (error) {
+        console.log(error)
+        return false
+    }
+}
+
 export function removeUserLocalStorage(): boolean {
     try {
         window.localStorage.removeItem('username');

@@ -1,14 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getLocalStorageItem } from "../../utils/localStateManager";
+import { getLocalStorageItem, removeLocalStorageItem, setLocalStorageItem } from "../../utils/localStateManager";
 
 
 type GameStateType = {
-    gameId: string
+    gameId: string | null
     playerId: string
 }
 
 const initialState: GameStateType = {
-    gameId: getLocalStorageItem('gameId') || '',
+    gameId: getLocalStorageItem('gameId') || null,
     playerId:''
 } 
 
@@ -18,15 +18,17 @@ const gameSlice = createSlice({
     initialState,
     reducers: {
         setGameState: (state, actions) => {
-            if (state.gameId == '') {
+            if (state.gameId == null) {
+                setLocalStorageItem('gameId', actions.payload.gameId);
                 state.gameId = actions.payload.gameId
                 state.playerId = actions.payload.playerId
             }
         },
-        removeGameState: (state, action) => {
-            if (state.gameId !== '') {
+        removeGameState: (state) => {
+            if (state.gameId !== null) {
                 state.gameId = ''
                 state.playerId = ''
+                removeLocalStorageItem('gameId')
             }
         }
     }

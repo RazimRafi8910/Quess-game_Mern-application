@@ -1,21 +1,21 @@
 
 interface UserCardProps {
-  userReady?: boolean
-  username?: string
-  rank?: number
+  userReady: boolean
+  username: string
+  host?: 'host' | 'player'
 }
 
 
-function UserCard({username,userReady,rank}:UserCardProps) {
+function UserCard({username,userReady,host}:UserCardProps) {
   return (
-      <>
-        <div className="border-slate-800 rounded-md bg-gray-700 px-2 py-1">
+    <>
+      <div className={`${userReady ? "border-green-800" : "border-red-800" } border-2 rounded-md bg-neutral-800 px-2 py-1`}>
             <div className="flex justify-between align-middle">
           <h4 className="text-base text-gray-300 font-semibold md:text-lg m-0">{ username && username || "Username"}</h4>
                 <p className="m-0 text-sm text-gray-50">:</p>
               </div>
               <div className="flex justify-between">
-                <p className="m-0 text-sm text-gray-500">Rank:{ rank && rank || "20" }</p>
+                <p className="m-0 text-sm text-gray-500">{host == 'host' ? "host" : "player"}</p>
                   {
                     userReady ?
                       <p className="text-green-700 text-sm font-medium">Ready</p> :

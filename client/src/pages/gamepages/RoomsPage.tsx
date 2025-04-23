@@ -101,7 +101,7 @@ function RoomsPage() {
             <div className="flex-row px-6 py-2">
               {loading == false && currentLobby && currentLobby.length > 0 ? 
                 currentLobby.map((room) => (
-                  <RoomsDiv key={room.gameId} roomName={room.gameName} players={ room.players.length } category={room.category} />
+                  <RoomsDiv key={room.gameId} gameId={room.gameId} roomName={room.gameName} players={ room.players } category={room.category} />
                 ))
                 :
                 <p className="text-neutral-300 text-center">No rooms found</p>

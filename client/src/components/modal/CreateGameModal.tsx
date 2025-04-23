@@ -96,7 +96,6 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
     const result = await getFetch<GameStateResponce>({ url: '/game/create', method: "POST", body: requestData });
     if (result !== undefined && result.success) {
       reset();
-      console.log(result.data)
       dispatch(setGameState(result.data?.gameId));
       
       navigate(`/lobby/${result.data?.gameId}`)

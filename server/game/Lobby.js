@@ -17,9 +17,10 @@ export class Lobby {
         this.players.delete(playerId);
     }
 
-    createGame(hostname,category,gameName,password,userId) {
-        const newGame = new Game(hostname, category, gameName,password)
-        const player = this.players.get(userId);
+    createGame(gameHost, category, gameName, password, noPlayers, userId) {
+        //create new game
+        const newGame = new Game(gameHost, category, gameName, password, noPlayers);
+        const player = this.players.get(userId); // add player to the lobby state
         this.rooms.set(newGame.gameId, newGame);
         this.io.emit(ServerSocketEvents.LOBBY_ROOM_UPDATE, {data: this.getAllGameRooms()});
         //player joins the new socket room
@@ -34,9 +35,17 @@ export class Lobby {
 
     getGameState(gameId) {
         if (this.rooms.has(gameId)) {
-            return this.rooms.get(gameId);
-        } 
+            return this.rooms.get(gameId)
+        }
         return null;
+    }
+
+    removeGameState(gameId) {
+        if (this.rooms.has(gameId)) {
+            this.rooms.delete(gameId)
+            return true
+        }
+        return false
     }
     
 }

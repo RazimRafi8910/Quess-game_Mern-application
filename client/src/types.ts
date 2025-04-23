@@ -8,13 +8,17 @@ enum Options {
 
 export enum ServerSocketEvnets {
     LOBBY_PLAYER_UPDATE = 'current_players',
-    LOBBY_ROOM_UPDATE = 'current_rooms'
+    LOBBY_ROOM_UPDATE = 'current_rooms',
+    GAME_ROOM_UPDATE = 'room_update',
+    SOCKET_ERROR = 'socket_error'
 }
 
 export enum SocketEvents {
     CONNECTION = '',
     DISCONNECT = '',
-    JOIN_ROOM = 'join_room'
+    JOIN_ROOM = 'join_room',
+    LEAVE_ROOM = 'leave_room',
+    SOCKET_ERROR = 'socket_error'
 }
 
 export type QuestionOptionType = {
@@ -37,12 +41,22 @@ export type CategorysType = {
     _id:string
 }
 
+export type GameRoomPlayerType = {
+    username: string,
+    role: 'host' | 'player'
+    isReady:boolean
+}
+
 
 export type GameRoomType = {
     category: string
-    host: string
+    host: {
+        username: string,
+        user_id:string
+    }
     gameId: string
     state: string
-    players: string[]
-    gameName:string
+    players:  [string,GameRoomPlayerType][]
+    gameName: string
+    playerLimit:number
 }
