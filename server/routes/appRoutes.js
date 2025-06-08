@@ -4,6 +4,11 @@ import verifyUser from '../middleware/verifyUser.js';
 
 const router = express()
 
+router.all('/', (req, res) => {
+    console.log(`[test request] from ${req.ip}`);
+    res.send("server is running");
+})
+
 //athentication
 router.post('/signup',signup)
 router.post('/login', login)

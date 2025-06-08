@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getLocalStorageItem, removeLocalStorageItem, setLocalStorageItem } from "../../utils/localStateManager";
+import { getLocalStorageItem, removeLocalStorageItem } from "../../utils/localStateManager";
 
 
 type GameStateType = {
@@ -19,7 +19,6 @@ const gameSlice = createSlice({
     reducers: {
         setGameState: (state, actions) => {
             if (state.gameId == null) {
-                setLocalStorageItem('gameId', actions.payload.gameId);
                 state.gameId = actions.payload.gameId
                 state.playerId = actions.payload.playerId
             }

@@ -16,6 +16,7 @@ export class Game {
         ]);
         this.gameId = generateGameID();
         this.state = 'Lobby';
+        console.log(password)
         if (password !== '' || password !== null) {
             this.password = password
             this.secure = true
@@ -24,7 +25,9 @@ export class Game {
         }
     }
 
-    addPlayer(playerId,username, role = 'player') {
+    addPlayer(playerId, username, role = 'player') {
+        console.log("limit " + this.playerLimit)
+        console.log("player " + this.players.size)
         if (this.players.size >= this.playerLimit) {
             return false
         }
@@ -36,8 +39,32 @@ export class Game {
             isReady: false,
             role,
         }
-        this.players.set(playerId,newPlayer)
+        this.players.set(playerId, newPlayer)
         return true;
+    }
+
+    updatePlayerIsready(playerId,status) {
+        const player = this.players.get(playerId)
+        if (!player) {
+            return false;
+        }
+
+        player.isReady = status
+        return true
+    }
+
+    startGame(hostId) {
+        if (hostId != this.host.user_id) {
+            return false;
+        }
+        
+        const notReadyPlayers = [...this.players].find((player) => !player[1].isReady && player[1].role !== 'host') || null;
+        if (notReadyPlayers) {
+            return false
+        }
+        const host = this.players.get(hostId);
+        host.isReady = true;
+        this.state = 'Started'
     }
 
     removePlayer(playerId) {

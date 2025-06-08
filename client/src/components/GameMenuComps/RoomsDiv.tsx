@@ -1,14 +1,19 @@
 import { useNavigate } from "react-router-dom";
+import { IoLockOpenOutline,IoLockClosedOutline } from "react-icons/io5";
 
 interface RoomDivProps {
     roomName: string;
     players: Map<string,object>;
     category: string;
-    gameId:string
+    playerLimit:number
+    gameId: string
+    secure:boolean
 }
 
-function RoomsDiv({ gameId,roomName, players, category }: RoomDivProps) {
+function RoomsDiv({ gameId,roomName, players, playerLimit, category, secure }: RoomDivProps) {
     const navigate = useNavigate()
+    console.log(secure)
+    console.log(players)
   return (
       <>
           <div className="container" onClick={()=>{navigate(`/lobby/${gameId}`)}}>
@@ -18,7 +23,10 @@ function RoomsDiv({ gameId,roomName, players, category }: RoomDivProps) {
                           <h6 className="font-semibold text-neutral-300">{ roomName }</h6>
                           <p className="text-sm text-stone-500">Category : <span className="font-medium">{ category }</span></p>
                       </div>
-                      <p className="text-sm font-light text-neutral-400 text-balance mt-2"><strong>Lobby: <span></span> </strong>4</p>
+                      <div className="flex">
+                          <p className="text-sm font-light text-neutral-400 text-balance mt-2"><strong>Lobby: <span>{players.size}</span> </strong>{playerLimit}</p>
+                          <p className="m-0 mt-2 ms-1 text-slate-400">{secure == true ? <IoLockClosedOutline/> : <IoLockOpenOutline/>}</p>
+                      </div>
                   </div>
               </div>
           </div>

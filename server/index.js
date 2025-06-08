@@ -61,6 +61,12 @@ initializeSocket(io, game);
 
 //io.on('connection',(socket)=>{ socket.leave })
 
+//404
+app.all('*', (req, res) => {
+    console.log(`[invalid url] from ${req.ip}`);
+    res.status(404).json({ message: "incvalid Url path" });
+})
+
 //error handler
 app.use(errorHandler);
 

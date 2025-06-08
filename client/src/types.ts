@@ -10,7 +10,9 @@ export enum ServerSocketEvnets {
     LOBBY_PLAYER_UPDATE = 'current_players',
     LOBBY_ROOM_UPDATE = 'current_rooms',
     GAME_ROOM_UPDATE = 'room_update',
-    SOCKET_ERROR = 'socket_error'
+    GAME_ROOM_ERROR = 'game_error',
+    SOCKET_ERROR = 'socket_error',
+    GAME_ROOM_CLOSED = 'room_closed'
 }
 
 export enum SocketEvents {
@@ -18,6 +20,9 @@ export enum SocketEvents {
     DISCONNECT = '',
     JOIN_ROOM = 'join_room',
     LEAVE_ROOM = 'leave_room',
+    CLOSE_ROOM = 'close_room',
+    START_GAME = 'start_game',
+    PLAYER_UPDATE = 'player_update',
     SOCKET_ERROR = 'socket_error'
 }
 
@@ -54,9 +59,10 @@ export type GameRoomType = {
         username: string,
         user_id:string
     }
+    secure:boolean
     gameId: string
     state: string
-    players:  [string,GameRoomPlayerType][]
+    players:  Map<string,GameRoomPlayerType>
     gameName: string
     playerLimit:number
 }

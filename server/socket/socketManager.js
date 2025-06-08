@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { ServerSocketEvents } from '../utils/constants.js';
 import { handleSocketGameEvent } from './gameManager.js'
+import { getCookieByName } from '../utils/cookieExtract.js'
 /**
  * 
  * @param {Server<import("socket.io/dist/typed-events").DefaultEventsMap, import("socket.io/dist/typed-events").DefaultEventsMap, import("socket.io/dist/typed-events").DefaultEventsMap, any>} io 
@@ -13,14 +14,13 @@ export const initializeSocket = (io, gameLobby) => {
         try {
 
             const cookie = socket.handshake.headers.cookie;
-            const token = cookie.split('=')[1];
+            const token = getCookieByName(cookie, 'token');
 
             if (!token) {
                 throw new Error("Un-authorized handshake. Token is missing")
             }
 
             //socket.join(socket.handshake.auth.id);
-
             const player = jwt.verify(token, process.env.JWT_KEY);
 
             socket.player = player;
@@ -47,7 +47,7 @@ export const initializeSocket = (io, gameLobby) => {
 
         } catch (error) {
             console.error(error);
-            socket.emit('socket-error', error.message || "something went wrong with socket connection");
+            socket.emit(ServerSocketEvents.SOCKET_ERROR, error.message || "something went wrong with socket connection");
         }
     });
 }

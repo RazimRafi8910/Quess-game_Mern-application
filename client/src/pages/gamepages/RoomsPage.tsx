@@ -3,9 +3,11 @@ import RoomsDiv from "../../components/GameMenuComps/RoomsDiv";
 import CreateGameModal from "../../components/modal/CreateGameModal";
 import useFetch from "../../Hooks/useFetch";
 import { GameRoomType, ServerSocketEvnets } from "../../types";
+import { useNavigate } from "react-router-dom";
 import Loader from "../../components/Loader";
 import { useOutletContext } from "react-router-dom";
 import { Socket } from "socket.io-client";
+import { toast } from "react-toastify";
 
 function RoomsPage() {
   const searchRef = useRef<HTMLInputElement>(null);
@@ -14,6 +16,7 @@ function RoomsPage() {
   const { error, data, loading } = useFetch<[GameRoomType]>('/game/rooms');
   const [currentLobby, setCurrentLobby] = useState<GameRoomType[] | null>(null);
   const socket = useOutletContext<Socket | null>()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (data !== null) {
@@ -32,9 +35,15 @@ function RoomsPage() {
       console.log("game emit", data);
       setCurrentLobby(data.data)
     }
+
+    const handleSocketError = (error: string) => {
+      console.log(error)
+      toast.error(error || "Something went wrong")
+      navigate('/room')
+    }
     
     socket?.on(ServerSocketEvnets.LOBBY_PLAYER_UPDATE, handleCurrentLobby);
-
+    socket?.on(ServerSocketEvnets.SOCKET_ERROR, handleSocketError)
     socket?.on(ServerSocketEvnets.LOBBY_ROOM_UPDATE,handleGameCreated)
 
     return () => {
@@ -101,7 +110,15 @@ function RoomsPage() {
             <div className="flex-row px-6 py-2">
               {loading == false && currentLobby && currentLobby.length > 0 ? 
                 currentLobby.map((room) => (
-                  <RoomsDiv key={room.gameId} gameId={room.gameId} roomName={room.gameName} players={ room.players } category={room.category} />
+                  <RoomsDiv
+                    key={room.gameId}
+                    gameId={room.gameId}
+                    roomName={room.gameName}
+                    players={room.players}
+                    playerLimit={room.playerLimit}
+                    category={room.category}
+                    secure={ room.secure }
+                  />
                 ))
                 :
                 <p className="text-neutral-300 text-center">No rooms found</p>

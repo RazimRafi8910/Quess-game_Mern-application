@@ -5,7 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from 'yup';
 import { useNavigate } from "react-router-dom";
 import useFetch from "../../Hooks/useFetch";
-import { getLocalStorageItem } from "../../utils/localStateManager";
+import { getLocalStorageItem, setLocalStorageItem } from "../../utils/localStateManager";
 import { useDispatch } from "react-redux";
 import { setGameState } from "../../store/slice/gameSlice";
 
@@ -96,6 +96,8 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
     const result = await getFetch<GameStateResponce>({ url: '/game/create', method: "POST", body: requestData });
     if (result !== undefined && result.success) {
       reset();
+      setLocalStorageItem('gameId', result.data?.gameId);
+      console.log(window.localStorage.getItem('gameId'));
       dispatch(setGameState(result.data?.gameId));
       
       navigate(`/lobby/${result.data?.gameId}`)

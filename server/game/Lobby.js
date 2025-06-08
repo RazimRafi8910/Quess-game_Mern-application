@@ -18,7 +18,7 @@ export class Lobby {
     }
 
     createGame(gameHost, category, gameName, password, noPlayers, userId) {
-        //create new game
+        //create a new game
         const newGame = new Game(gameHost, category, gameName, password, noPlayers);
         const player = this.players.get(userId); // add player to the lobby state
         this.rooms.set(newGame.gameId, newGame);
