@@ -3,11 +3,10 @@ import { getGameLobby } from "../socket/socketManager.js";
 export const createGame = (req, res, next) => {
     try {
         const user = req.user;
-        const { roomName, noPlayers, password, havePassword, category, hostName } = req.body;
+        const { roomName, noPlayers, password, havePassword, category, hostName,hostSocketId } = req.body;
 
-        if (!roomName || !hostName || !noPlayers || !category) {
+        if (!roomName || !hostName || !noPlayers || !category || !hostSocketId) {
             console.log(req.body);
-            
             return res.status(409).json({ success: false, message: "invalid request" });
         }
         
@@ -22,7 +21,7 @@ export const createGame = (req, res, next) => {
             username: hostName,
             user_id:user.user_id
         }
-        const newGame = gameLobby.createGame(gameHost, category, roomName, password, noPlayers,user.user_id);
+        const newGame = gameLobby.createGame(gameHost, category, roomName, password, noPlayers, user.user_id, hostSocketId);
 
         if (!newGame) {
             return res.status(500).json({ success: false, message: "game not created" });
@@ -62,6 +61,35 @@ export const getGameDetails = (req, res, next) => {
     return res.status(200).json({ success: true, message: "game found", data });
 }
 
+export const checkGamePassword = (req, res, next) => {
+    const { password,gameId } = req.body;
+    if (!password || password == '') {
+        return res.status(409).json({ success: false, message: "missing or invalid password" });
+    }
+
+    if (password.length < 3) {
+        return res.status(409).json({ success: false, message: "password must be 3 letters" });
+    }
+    
+    const gameLobby = getGameLobby(req);
+    const game = gameLobby.getGameState(gameId)
+
+    if (!game) {
+        return res.status(409).json({ success: false, message: "Game not found" });
+    }
+
+    const result = game.checkGamePassword(password);
+    if (!result) {
+        return res.status(401).json({ success: false, message: "Password not matched" });
+    }
+
+    return res.status(200).json({
+        success: true,
+        message: "Password matched",
+        data: {
+            status:result
+        }});
+}
 
 export const getGameRooms = (req, res, next) => {
     const gameLobby = getGameLobby(req);

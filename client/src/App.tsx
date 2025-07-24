@@ -56,7 +56,7 @@ function App() {
           {/* game routes */}
           <Route element={<AuthProtect><SocketProvider /></AuthProtect>}>
             <Route
-              path="/game"
+              path="/game/:id"
               element={
                 <AuthProtect>
                   <Game />

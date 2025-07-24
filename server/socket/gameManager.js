@@ -1,4 +1,4 @@
-import { ServerSocketEvents, SocketEvents } from "../utils/constants.js";
+import { ServerSocketEvents, SocketEvents, GameState } from "../utils/constants.js";
 
 function handleSocketError(error) {
     return
@@ -19,14 +19,17 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         }
 
         if (socket.rooms.has(gameId)) {
+            if (game.state == GameState.STARTED) {
+                io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_STARTED, { status: true, gameId,gameStarted:true });
+            }
             io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() });
             return;
         }
+
         
         //join room
         socket.join(gameId)
-
-        const joined = game.addPlayer(playerId, username)
+        const joined = game.addPlayer(playerId, username, socket.id);
         if (!joined) {
             socket.leave(gameId);
             socket.emit(ServerSocketEvents.SOCKET_ERROR, "Room is Full")
@@ -48,7 +51,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         }
 
         const result = game.removePlayer(data.playerId)
-        if (result) {
+        if (result.status) {
             socket.leave(data.gameId)
             io.to(data.gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE,{gameState:game.toJson()})
         }
@@ -82,28 +85,34 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             return
         }
         const started = game.startGame(hostId);
-        console.warn(started)
-        if (!started) {
-            io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_ERROR, "Player are not ready",false);
+        
+        if (!started.status) {
+            io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_ERROR, started.message, false);
+            return
         }
 
+        io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_STARTED, started);
     })
 
     //close room (host)
-    socket.on(SocketEvents.CLOSE_ROOM, (data) => {
-        const game = gameLobby.getGameState(data.gameId);
+    socket.on(SocketEvents.CLOSE_ROOM, ({gameId,playerId}) => {
+        const game = gameLobby.getGameState(gameId);
         if (!game) {
             return
         }
-        if (game.host.user_id !== data.playerId) {
+        if (game.host.user_id !== playerId) {
             console.error("[game close error] player is not host");
             socket.emit(ServerSocketEvents.GAME_ROOM_ERROR,"Player is not host")
             return;
         }
-
-        io.to(data.gameId).emit(ServerSocketEvents.Game_ROOM_CLOSED,"Game is closed by the Host")
+        const status = gameLobby.removeGameState(gameId);
+        if (status) {
+            io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_CLOSED, "Game is closed by the Host");
+        }
+        io.emit(ServerSocketEvents.LOBBY_ROOM_UPDATE, { data: gameLobby.getAllGameRooms() });
     })
 
+    //player disconnect
     socket.on('disconnecting', () => {
         const [id, gameId] = [...socket.rooms]
         if (!gameId) {
@@ -111,9 +120,16 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         }
 
         const game = gameLobby.getGameState(gameId)
+
+        if (!game) {
+            return
+        }
         console.log('id:'+socket.player.user_id);
         const result = game.removePlayer(socket.player.user_id)
-        if (!result) {
+        if (result.host) {
+            gameLobby.removeGameState(gameId);
+            io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_CLOSED, "Host disconnected from the game");
+            io.emit(ServerSocketEvents.LOBBY_ROOM_UPDATE, { data: gameLobby.getAllGameRooms() });
             return
         }
         io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() });

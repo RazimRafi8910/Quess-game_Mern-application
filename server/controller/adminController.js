@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
 import Category from "../models/category.js";
 import { Question } from "../models/QuestionModel.js";
+import { User } from "../models/userModel.js";
 
 const AdminController = {
     getQuestions: async (req, res, next) => {
@@ -110,6 +110,7 @@ const AdminController = {
     getCategorys: async (req, res, next) => {
         try {
             const categorys = await Category.find().lean();
+            console.log(categorys)
             return res.status(200).json({ message: "Category Sended", success: true, data: categorys });
         } catch (error) {
             console.error('[Category Query Error]', error.message);
@@ -137,6 +138,16 @@ const AdminController = {
 
         } catch (error) {
             console.error('[Category delete Error]', error.message);
+            next(error)
+        }
+    },
+
+    getAllUsers: async(req, res, next) => {
+        try {
+            const users = await User.find().limit(10).lean();
+            return res.status(200).json({ success: true, message: "users founded", data: users });
+        } catch (error) {
+            console.log('[User fetch all Error]', error.message);
             next(error)
         }
     }

@@ -13,9 +13,12 @@ router.post('/question/create', verifyUser, verifyAdmin, AdminController.createQ
 router.delete('/question/:question_id/delete', verifyUser, verifyAdmin, AdminController.deleteQuestion);
 
 //category routes
-router.post('/category/create', verifyUser, verifyAdmin, AdminController.createCategory);
 router.get('/category', verifyUser, verifyAdmin, AdminController.getCategorys);
+router.post('/category/create', verifyUser, verifyAdmin, AdminController.createCategory);
 router.delete('/category/:category_id/delete', verifyUser, verifyAdmin, AdminController.deleteCategory);
+
+//user routes
+router.get('/user', verifyUser, verifyAdmin, AdminController.getAllUsers);
 
 
 export default router;

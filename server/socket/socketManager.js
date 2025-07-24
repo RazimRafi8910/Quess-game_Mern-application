@@ -30,8 +30,8 @@ export const initializeSocket = (io, gameLobby) => {
 
             
             //development code
-            console.log(gameLobby.players.size);
-            console.log(socket.handshake.auth);
+            // console.log(gameLobby.players.size);
+            // console.log(socket.handshake.auth);
 
             io.emit(ServerSocketEvents.LOBBY_PLAYER_UPDATE, { players: gameLobby.players.size });
 

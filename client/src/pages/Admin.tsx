@@ -7,6 +7,7 @@ import CategoryTab from "../components/AdminCompnents/CategoryTab";
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
 import { useNavigate } from "react-router-dom";
+import UserTab from "../components/AdminCompnents/UserTab";
 
 function Admin() {
   const [currentTab, setCurrentTab] = useState<number>(0);
@@ -14,8 +15,11 @@ function Admin() {
   const naviage = useNavigate()
 
   useEffect(() => {
+    console.log(userDetails)
     if (!userDetails.logined) {
       naviage('/login');
+    } else if (userDetails.user?.role !== 'admin') {
+      naviage('/');
     }
   },[])
 
@@ -26,7 +30,9 @@ function Admin() {
       case 1:
         return <QuestionDiv />
       case 2:
-        return <CategoryTab/>
+        return <CategoryTab />
+      case 3:
+        return <UserTab />
       default:
         return <p className="text-white text-center py-10">No Tabs Found</p>
     }

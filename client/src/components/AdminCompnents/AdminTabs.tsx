@@ -5,7 +5,7 @@ interface AdminTabProps {
 }
 
 function AdminTabs({handleTabChange,currentTab}:AdminTabProps) {
-    const tabs = ['Create Questions','Qestions', 'Category', 'Users'];
+    const tabs = ['Create Questions','Qestions', 'Category', 'Users','games'];
     
     return (
         <>

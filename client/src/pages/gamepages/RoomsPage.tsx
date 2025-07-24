@@ -49,6 +49,7 @@ function RoomsPage() {
     return () => {
       socket?.off(ServerSocketEvnets.LOBBY_PLAYER_UPDATE, handleCurrentLobby);
       socket?.off(ServerSocketEvnets.LOBBY_ROOM_UPDATE, handleGameCreated);
+      socket?.off(ServerSocketEvnets.LOBBY_PLAYER_UPDATE, handleCurrentLobby);
     }
 
   },[socket])
@@ -70,7 +71,7 @@ function RoomsPage() {
   return (
     <>
       <div className="container mx-auto">
-        <CreateGameModal isOpen={modalOpen} setModal={setModalOpen}/>
+        <CreateGameModal isOpen={modalOpen} setModal={setModalOpen} />
         <div className="flex justify-center h-full">
           <div className="md:border border-t-2 border-neutral-700 bg-neutral-900/[0.4] rounded-md w-full md:w-1/2 mt-20 py-4">
             <p className="text-gray-300 ms-3">online: { totalPlayers }</p>

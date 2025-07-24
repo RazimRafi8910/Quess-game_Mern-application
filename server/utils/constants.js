@@ -10,14 +10,17 @@ export const SocketEvents = {
 }
 
 export const GameState = {
-    
+    LOBBY:'Lobby',
+    STARTED: 'Started',
+    FINISHED:'Finished',
 }
 
 
 export const ServerSocketEvents = {
     CONNECTION:'connection',
     DISCONNECT: 'disconnect',
-    Game_ROOM_CLOSED:'room_closed',
+    GAME_ROOM_CLOSED: 'room_closed',
+    GAME_ROOM_STARTED:'room_started',
     LOBBY_PLAYER_UPDATE: 'current_players',
     LOBBY_ROOM_UPDATE: 'current_rooms',
     GAME_ROOM_UPDATE: 'room_update',

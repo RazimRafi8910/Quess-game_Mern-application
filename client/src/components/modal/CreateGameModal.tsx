@@ -7,7 +7,10 @@ import { useNavigate } from "react-router-dom";
 import useFetch from "../../Hooks/useFetch";
 import { getLocalStorageItem, setLocalStorageItem } from "../../utils/localStateManager";
 import { useDispatch } from "react-redux";
+import { Socket } from "socket.io-client";
+import { useOutletContext } from "react-router-dom";
 import { setGameState } from "../../store/slice/gameSlice";
+import Loader from "../Loader";
 
 interface ModalProps {
   isOpen: boolean;
@@ -17,6 +20,10 @@ interface ModalProps {
 type GameStateResponce = {
   gameId: string
   playerId:string
+}
+
+type CategoryType = {
+  categoryName: string;
 }
 
 interface FormContextValue {
@@ -48,10 +55,11 @@ const InputSchema = yup.object({
 function CreateGameModal({ isOpen, setModal }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate()
+  const socket = useOutletContext<Socket | null>()
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const dispatch = useDispatch()
 
-  const { getFetch } = useFetch('', false);
+  const { data:category, loading, error, getFetch } = useFetch<CategoryType[]>('/admin/category');
 
   const { handleSubmit, register, reset, formState: { errors } } = useForm<RoomTypes>({
     resolver: yupResolver(InputSchema),
@@ -90,6 +98,7 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
       ...data,
       havePassword:showPassword,
       hostName: getLocalStorageItem<string>('username'),
+      hostSocketId:socket?.id || null,
     }
     
     //create game request to backend
@@ -137,17 +146,22 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
                   <InputForm htmlLabel="Room name" label="roomName" inputType="text" placeholder="Room name" inputError={errors.roomName} register={register} required={true}  />
                   
 
-                  <div className="mb-2">
-                      <label className="block my-1 text-sm font-medium text-gray-900 dark:text-white">Category</label>
-                      <select {...register("category")} className="bg-gray-800/[0.5] border-gray-300 text-gray-900 test-sm rounded-lg block w-full dark:text-gray-50 p-2">
-                        <option value={""} className="bg-gray-800" defaultValue={""} hidden>Select the Options</option>
-                        <option className="bg-gray-800" value={"IT"}>IT</option>
-                        <option className="bg-gray-800" value={"programming"}>Programming</option>
-                        <option className="bg-gray-800" value={"general"}>General</option>
-                        <option className="bg-gray-800" value={"history"}>history</option>
-                      </select>
-                      {errors.category && <p className="text-red-500">{ errors.category.message }</p>}
-                    </div>
+                    {loading ? 
+                      <Loader />
+                      :
+                        <div className="mb-2">
+                          <label className="block my-1 text-sm font-medium text-gray-900 dark:text-white">Category</label>
+                          <select {...register("category")} className="bg-gray-800/[0.5] border-gray-300 text-gray-900 test-sm rounded-lg block w-full dark:text-gray-50 p-2">
+                          <option value={""} className="bg-gray-800" defaultValue={""} hidden>Select the Options</option>
+                          {
+                            category?.map((item, index) => (
+                              <option className="bg-gray-800" key={index} value={item.categoryName}>{ item.categoryName }</option>  
+                            ))
+                          }
+                          </select>
+                          {errors.category && <p className="text-red-500">{ errors.category.message }</p>}
+                        </div>
+                       }
 
                     { showPassword && <InputForm htmlLabel="Password" label="password" inputType="text" placeholder="password" inputError={errors.password} register={register} required={true} /> }
 

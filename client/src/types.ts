@@ -12,6 +12,7 @@ export enum ServerSocketEvnets {
     GAME_ROOM_UPDATE = 'room_update',
     GAME_ROOM_ERROR = 'game_error',
     SOCKET_ERROR = 'socket_error',
+    GAME_ROOM_STARTED = 'room_started',
     GAME_ROOM_CLOSED = 'room_closed'
 }
 

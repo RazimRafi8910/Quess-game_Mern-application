@@ -17,9 +17,14 @@ export class Lobby {
         this.players.delete(playerId);
     }
 
-    createGame(gameHost, category, gameName, password, noPlayers, userId) {
+    getAllPlayers() {
+        console.log(this.players)
+        return this.players;
+    }
+
+    createGame(gameHost, category, gameName, password, noPlayers, userId, hostSocketId) {
         //create a new game
-        const newGame = new Game(gameHost, category, gameName, password, noPlayers);
+        const newGame = new Game(gameHost, category, gameName, password, noPlayers, hostSocketId);
         const player = this.players.get(userId); // add player to the lobby state
         this.rooms.set(newGame.gameId, newGame);
         this.io.emit(ServerSocketEvents.LOBBY_ROOM_UPDATE, {data: this.getAllGameRooms()});

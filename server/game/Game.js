@@ -1,8 +1,10 @@
-import { generateGameID } from '../utils/idGenerator.js'
+import { getQuestionsByCategory } from '../services/questions.js';
+import { generateGameID } from '../utils/idGenerator.js';
+import { GameState } from '../utils/constants.js'
 
 
 export class Game {
-    constructor(gameHost,category,gameName,password,playerLimit) {
+    constructor(gameHost,category,gameName,password,playerLimit,hostSocketId) {
         this.host = gameHost;
         this.gameName = gameName;
         this.category = category;
@@ -11,23 +13,26 @@ export class Game {
             [this.host.user_id, {
                 username: this.host.username,
                 role: 'host',
-                isReady:false
+                isReady: false,
+                socketId:hostSocketId,
             }]
         ]);
+        this.questions = [];
         this.gameId = generateGameID();
-        this.state = 'Lobby';
-        console.log(password)
-        if (password !== '' || password !== null) {
-            this.password = password
-            this.secure = true
-        } else {
+        this.state = GameState.LOBBY;
+        if (password == null || password == '') {
             this.secure = false
+        } else {
+            this.password = password;
+            this.secure = true
         }
+        console.log(this.secure)
     }
 
-    addPlayer(playerId, username, role = 'player') {
+    addPlayer(playerId, username, socketId, role = 'player') {
         console.log("limit " + this.playerLimit)
         console.log("player " + this.players.size)
+        console.log("socket id:" + socketId);
         if (this.players.size >= this.playerLimit) {
             return false
         }
@@ -38,9 +43,49 @@ export class Game {
             username: username,
             isReady: false,
             role,
+            socketId,
         }
         this.players.set(playerId, newPlayer)
         return true;
+    }
+
+    checkGamePassword(password) {
+        if (this.password != password && this.secure) {
+            return false
+        }
+        return true
+    }
+
+    //TODO: find logic for splting member and complete code
+    makeTeam() {
+        let team1, team2;
+        const players = [...this.players];
+        if (this.playerLimit == 2) {
+            this.team1 = [players[0]];
+            this.team2 = [players[1]];
+            return {
+                status: true,
+                teamOne: this.team1,
+                teamTwo:this.team2,
+            };
+        }
+
+        let currentTeam = 1;
+        while (players.length > 0) {
+            const player = players.pop(Math.random() * players.length);
+            if (currentTeam == 1) {
+                this.team1.push(player);
+                currentTeam = 2;
+            } else {
+                this.team2.push(player);
+                currentTeam = 1;
+            }
+        }
+        return {
+            status: true,
+            teamOne: this.team1,
+            teamTwo:this.team2,
+        }
     }
 
     updatePlayerIsready(playerId,status) {
@@ -55,25 +100,88 @@ export class Game {
 
     startGame(hostId) {
         if (hostId != this.host.user_id) {
-            return false;
+            return {
+                message: "Player is not host",
+                status:false
+            };
         }
-        
+
+        if (this.players.size < 2) {
+            return {
+                message: "minimun 2 players is requied to start the game",
+                status:false
+            }
+        }
+
         const notReadyPlayers = [...this.players].find((player) => !player[1].isReady && player[1].role !== 'host') || null;
         if (notReadyPlayers) {
-            return false
+            return {
+                message: "Players are not ready",
+                status:false
+            }
         }
+
         const host = this.players.get(hostId);
         host.isReady = true;
-        this.state = 'Started'
+
+        //team creation
+        const teamGenerationStat = this.makeTeam();
+        if (!teamGenerationStat.status) {
+            return {
+                message: "Team not generated",
+                status:false,
+            }
+        }
+
+        //question generation
+        this.generateQuestions().then((result) => {
+            this.questions.push(result);
+            console.log(this.questions);
+        })
+        this.state = GameState.STARTED;
+        
+        return {
+            message: "game started",
+            status: true,
+            gameId: this.gameId,
+            teams: {
+                team1: this.team1,
+                team2: this.team2,
+            },
+            gameStarted:false //does game move from lobbby or not
+        }
+    }
+
+    async generateQuestions() {
+        const category = this.category;
+        const result = await getQuestionsByCategory(category);
+        if (result.error) {
+            return null
+        }
+        return result.question
     }
 
     removePlayer(playerId) {
         if (this.players.has(playerId)) {
+
+            if (playerId == this.host.user_id) {
+                return {
+                    status: false,
+                    host:true
+                }
+            }
+
             this.players.delete(playerId);
-            return true; // player removed successfully
-        } else {
-            return false; // player not found
+            return {
+                status: true,
+                host:false,
+            } // player removed successfully
         }
+        return {
+            status: false,
+            host:false
+        }; // player not found
+        
     }
 
     toJson() {

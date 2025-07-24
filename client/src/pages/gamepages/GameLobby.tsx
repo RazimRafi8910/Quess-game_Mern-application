@@ -17,6 +17,7 @@ function GameLobby() {
     const [error, setError] = useState<string>('');
     const [game, setGame] = useState<GameRoomType | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [startTimer, setStartTimer] = useState(6);
     const userReducer = useSelector((state: RootState) => state.userReducer);
     const gameReducer = useSelector((state: RootState) => state.gameReducer);
     const dispatch = useDispatch()
@@ -55,6 +56,32 @@ function GameLobby() {
             }
         }
 
+        const handleGameStart = async (result: { status: boolean, gameId: string,message:string ,gameStarted:boolean}) => {
+            if (result.status) {
+                if (result.gameStarted) {
+                    navigate(`/game/${result.gameId}`)
+                    return
+                }
+
+                toast.info("Game will start soon");
+                const interval = setInterval(() => {
+                    setStartTimer((prev) => {
+                        if (prev <= 1) {
+                            clearInterval(interval)
+                        }
+                        return prev - 1
+                    });
+                },1000)
+                setTimeout(() => {
+                    navigate(`/game/${result.gameId}`)
+                    clearInterval(interval)
+                }, 5000);
+                
+            } else {
+                toast.warning(result.message)
+            }
+        }
+
         const handleGameClose = (message:string) => {
             toast.warning(message);
             navigate('/room');
@@ -62,7 +89,8 @@ function GameLobby() {
 
         socket?.on(ServerSocketEvnets.GAME_ROOM_UPDATE, handleRoomUpdate);
         socket?.on(ServerSocketEvnets.GAME_ROOM_ERROR, handleGameError);
-        socket?.on(ServerSocketEvnets.GAME_ROOM_CLOSED,handleGameClose)
+        socket?.on(ServerSocketEvnets.GAME_ROOM_CLOSED, handleGameClose);
+        socket?.on(ServerSocketEvnets.GAME_ROOM_STARTED, handleGameStart);
 
         socket?.emit(SocketEvents.JOIN_ROOM, {
             gameId: lobbyId,
@@ -74,6 +102,7 @@ function GameLobby() {
             socket?.off(ServerSocketEvnets.GAME_ROOM_UPDATE, handleRoomUpdate);
             socket?.off(ServerSocketEvnets.GAME_ROOM_ERROR, handleGameError);
             socket.off(ServerSocketEvnets.GAME_ROOM_CLOSED, handleGameClose);
+            socket?.off(ServerSocketEvnets.GAME_ROOM_STARTED, handleGameStart);
             dispatch(removeGameState());
         }
     }, [])
@@ -135,17 +164,23 @@ function GameLobby() {
                       </div>
                       <hr className="border-neutral-600 mt-6" />
                       <div className="flex justify-end gap-2 px-2 mt-2">
-                          <button className="bg-red-950 border border-red-500 rounded-md text-red-200 px-4 py-2 hover:bg-red-600" onClick={() => { setModalOpen(true) } } type="button">Exit</button>
-                          <GameLobbyButton
-                              host={game?.host.user_id === userId}
-                              playerReady={currentUser?.isReady ?? false}
-                              handleReadyFunc={handlePlayerReady}
-                              playerId={userId}
-                              handleGameStart={handleGameStart}
-                          />
+                          {startTimer <= 5 ?
+                              <p className="text-slate-300">Game will start in { startTimer }</p>
+                              :
+                              <>
+                                  <button className="bg-red-950 border border-red-500 rounded-md text-red-200 px-4 py-2 hover:bg-red-600" onClick={() => { setModalOpen(true) } } type="button">Exit</button>
+                                    <GameLobbyButton
+                                        host={game?.host.user_id === userId}
+                                        playerReady={currentUser?.isReady ?? false}
+                                        handleReadyFunc={handlePlayerReady}
+                                        playerId={userId}
+                                        handleGameStart={handleGameStart}
+                                    />
+                              </>
+                          }
                           {/* <button className="bg-green-800 border border-gray-100 rounded-md text-white px-4 py-2" type="button">Ready</button> */}
                       </div>    
-                          <p className="text-red-500 text-end me-4 mt-2">{ error }</p>
+                          { userId == game?.host.user_id && <p className="text-red-500 text-end me-4 mt-2">{ error }</p> }
                   </div>
               </div>
           </div>

@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { IoLockOpenOutline,IoLockClosedOutline } from "react-icons/io5";
+import { useState } from "react";
+import PasswordModal from "../modal/PasswordModal";
 
 interface RoomDivProps {
     roomName: string;
@@ -10,13 +12,20 @@ interface RoomDivProps {
     secure:boolean
 }
 
-function RoomsDiv({ gameId,roomName, players, playerLimit, category, secure }: RoomDivProps) {
+function RoomsDiv({ gameId, roomName, players, playerLimit, category, secure }: RoomDivProps) {
+    const [passwordModal,setPasswordModal] = useState<boolean>(false)
     const navigate = useNavigate()
-    console.log(secure)
-    console.log(players)
+    const handleGameJoin = () => {
+        if (secure) {
+            setPasswordModal(true)
+        } else {
+            navigate(`/lobby/${gameId}`)
+        }
+    }
   return (
       <>
-          <div className="container" onClick={()=>{navigate(`/lobby/${gameId}`)}}>
+          <PasswordModal isOpen={passwordModal} setModal={setPasswordModal} gameId={gameId} roomName={ roomName } navigate={navigate}  /> 
+          <div className="container" onClick={handleGameJoin}>
               <div className="border my-2 rounded-md px-3 py-2 border-stone-400 hover:bg-neutral-700 text-white w-full">
                   <div className="flex justify-between">
                       <div>
