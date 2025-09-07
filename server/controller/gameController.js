@@ -1,3 +1,4 @@
+import Category from "../models/category.js";
 import { getGameLobby } from "../socket/socketManager.js";
 
 export const createGame = (req, res, next) => {
@@ -89,6 +90,16 @@ export const checkGamePassword = (req, res, next) => {
         data: {
             status:result
         }});
+}
+
+export const getCategorys = async (req, res, next) => {
+    try {
+        const categorys = await Category.find().lean();
+        res.status(200).json({ success: true, message: "categorys found", data: categorys });
+    } catch (error) {
+        console.log('[Category query error]', error.message);
+        next(error)
+    }
 }
 
 export const getGameRooms = (req, res, next) => {

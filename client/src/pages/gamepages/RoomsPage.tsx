@@ -74,8 +74,8 @@ function RoomsPage() {
         <CreateGameModal isOpen={modalOpen} setModal={setModalOpen} />
         <div className="flex justify-center h-full">
           <div className="md:border border-t-2 border-neutral-700 bg-neutral-900/[0.4] rounded-md w-full md:w-1/2 mt-20 py-4">
-            <p className="text-gray-300 ms-3">online: { totalPlayers }</p>
-            <div className="flex my-3 w-full gap-2 px-6">
+            <p className="text-gray-300 me-4 text-opacity-50 my-0 text-end">online: { totalPlayers }</p>
+            <div className="flex mb-3 mt-1 w-full gap-2 px-6">
               <div className="md:w-1/2 w-full">
                 <input
                   type="text"

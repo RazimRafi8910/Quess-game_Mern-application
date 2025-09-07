@@ -1,11 +1,9 @@
-import { useOutletContext, useParams } from "react-router-dom"
+import { useOutletContext, useParams,useNavigate } from "react-router-dom"
 import UserCard from "../../components/GameMenuComps/UserCard"
-import { useNavigate } from "react-router-dom"
 import { useEffect, useMemo, useState } from "react"
 import { Socket } from "socket.io-client"
-import { ServerSocketEvnets, SocketEvents } from "../../types"
+import { ServerSocketEvnets, SocketEvents,GameRoomType } from "../../types"
 import { useDispatch, useSelector } from "react-redux"
-import { GameRoomType } from '../../types'
 import { RootState } from "../../store/store"
 import { removeGameState, setGameState } from "../../store/slice/gameSlice"
 import DeleteModal from "../../components/modal/DeleteModal"
@@ -30,6 +28,14 @@ function GameLobby() {
     }, [game, userId]);
 
     useEffect(() => {
+        socket?.emit(SocketEvents.JOIN_ROOM, {
+            gameId: lobbyId,
+            playerId: userReducer.user?.id,
+            username: userReducer.user?.username
+        });
+    },[])
+
+    useEffect(() => {
         if (!userReducer || !socket || !lobbyId) return;
 
         const handleRoomUpdate = (data: { gameState: GameRoomType }) => {
@@ -42,7 +48,8 @@ function GameLobby() {
                 ...data.gameState,
                 players : new Map(players)
             })
-            
+            console.log(game)
+            console.log("calleded")
         }
 
         const handleGameError = (message:string,showtoast=true,doNavigate = false) => {
@@ -56,10 +63,12 @@ function GameLobby() {
             }
         }
 
-        const handleGameStart = async (result: { status: boolean, gameId: string,message:string ,gameStarted:boolean}) => {
+        const handleGameStart = async (result: { status: boolean, gameId: string, message: string, gameStarted: boolean }) => {
+            console.log("start clicked")
+            console.log(game);
             if (result.status) {
                 if (result.gameStarted) {
-                    navigate(`/game/${result.gameId}`)
+                    navigate(`/game/${result.gameId}`, { state: { game } });
                     return
                 }
 
@@ -73,7 +82,7 @@ function GameLobby() {
                     });
                 },1000)
                 setTimeout(() => {
-                    navigate(`/game/${result.gameId}`)
+                    navigate(`/game/${result.gameId}`, { state: { game:game } });
                     clearInterval(interval)
                 }, 5000);
                 
@@ -90,22 +99,16 @@ function GameLobby() {
         socket?.on(ServerSocketEvnets.GAME_ROOM_UPDATE, handleRoomUpdate);
         socket?.on(ServerSocketEvnets.GAME_ROOM_ERROR, handleGameError);
         socket?.on(ServerSocketEvnets.GAME_ROOM_CLOSED, handleGameClose);
-        socket?.on(ServerSocketEvnets.GAME_ROOM_STARTED, handleGameStart);
-
-        socket?.emit(SocketEvents.JOIN_ROOM, {
-            gameId: lobbyId,
-            playerId: userReducer.user?.id,
-            username: userReducer.user?.username
-        });
+        socket?.on(ServerSocketEvnets.GAME_ROOM_STARTING, handleGameStart);
 
         return () => {
             socket?.off(ServerSocketEvnets.GAME_ROOM_UPDATE, handleRoomUpdate);
             socket?.off(ServerSocketEvnets.GAME_ROOM_ERROR, handleGameError);
             socket.off(ServerSocketEvnets.GAME_ROOM_CLOSED, handleGameClose);
-            socket?.off(ServerSocketEvnets.GAME_ROOM_STARTED, handleGameStart);
+            socket?.off(ServerSocketEvnets.GAME_ROOM_STARTING, handleGameStart);
             dispatch(removeGameState());
         }
-    }, [])
+    }, [game])
     
     const handleLeaveRoom = () => {
         if (userId === game?.host.user_id) {
@@ -120,11 +123,11 @@ function GameLobby() {
         socket?.emit(SocketEvents.PLAYER_UPDATE, { gameId:game?.gameId, playerId, playerStatus: !playerStatus });
     }
 
-    const handleGameStart = () => {
+    const handleHostGameStart = () => {
         if (userId !== game?.host.user_id) {
             return;
         }
-        socket?.emit(SocketEvents.START_GAME, { gameId: game?.gameId, hostId: game?.host.user_id, status: 'start' });
+        socket?.emit(SocketEvents.START_GAME, { gameId: game?.gameId, hostId: userId });
     }
 
     const navigate = useNavigate()
@@ -147,7 +150,7 @@ function GameLobby() {
                       <div className="flex justify-between px-3 mb-3">
                           <div>
                               <h1 className="text-white">{game?.gameName?.toUpperCase()}'s {" "} Lobby</h1>
-                              <p className="text-sm text-neutral-400">host: <span className="text-neutral-400">{ }</span> </p>
+                              <p className="text-sm text-neutral-400">host: <span className="text-neutral-400">{ game?.host.username}</span> </p>
                               <p className="text-sm text-neutral-500"> <span className="text-neutral-400">ID:</span>{ game?.gameId } <span><i className="ms-1 text-neutral-700 fa-solid fa-copy"></i></span> </p>
                           </div>
                           <div>
@@ -174,7 +177,7 @@ function GameLobby() {
                                         playerReady={currentUser?.isReady ?? false}
                                         handleReadyFunc={handlePlayerReady}
                                         playerId={userId}
-                                        handleGameStart={handleGameStart}
+                                        handleGameStart={handleHostGameStart}
                                     />
                               </>
                           }

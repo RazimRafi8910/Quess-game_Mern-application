@@ -1,5 +1,5 @@
 import { Game } from "./Game.js";
-import { ServerSocketEvents } from '../utils/constants.js'
+import { GameState, ServerSocketEvents } from '../utils/constants.js'
 
 export class Lobby {
     constructor(io) {
@@ -35,7 +35,9 @@ export class Lobby {
 
     getAllGameRooms() {
         const currentRooms = [...this.rooms.values()]
-        return currentRooms
+        const result = currentRooms.filter((game) => (game.state == GameState.LOBBY));
+        console.log(result);
+        return result;
     }
 
     getGameState(gameId) {

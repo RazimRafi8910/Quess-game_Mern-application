@@ -2,9 +2,30 @@ import { useEffect, useState } from "react";
 import OptionDIv from "../../components/GameComponents/OptionDIv";
 import TimerSection from "../../components/GameComponents/TimerSection";
 import ChatBox from "../../components/ChatComponents/ChatBox";
+import { useOutletContext, useLocation, useSearchParams, useParams } from 'react-router-dom';
+import { Socket } from 'socket.io-client';
+import { useSelector, UseSelector } from "react-redux";
+import { GameRoomType, ServerSocketEvnets, SocketEvents } from "../../types";
+import { RootState } from "../../store/store";
 
 function Game() {
+  const { id: gameId } = useParams();
+  const socket = useOutletContext<Socket | null>();
+  const location = useLocation()
+  const gameState = useSelector((state: RootState) => state.gameReducer);
+  const [game, setGame] = useState<GameRoomType | null>(location.state);
   const [selected, setSelected] = useState<null | string>(null);
+
+  useEffect(() => {
+    const handleGameStartedEvent = (data:any) => {
+      console.log(data)
+    }
+    console.log(location.state)
+    socket?.emit(SocketEvents.GAME_RUN, { gameId });
+    
+    return () => {
+    }
+  },[socket])
 
   const handeleSelect = (option:string) => {
     setSelected(option);
@@ -13,10 +34,6 @@ function Game() {
   const handleClearSelect = () => {
     setSelected(null);
   }
-
-  useEffect(() => {
-       
-  },[])
 
   return (
     <>

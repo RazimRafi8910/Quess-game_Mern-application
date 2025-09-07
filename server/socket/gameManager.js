@@ -25,7 +25,6 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() });
             return;
         }
-
         
         //join room
         socket.join(gameId)
@@ -82,16 +81,43 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
 
         const game = gameLobby.getGameState(gameId);
         if (!game) {
-            return
-        }
-        const started = game.startGame(hostId);
-        
-        if (!started.status) {
-            io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_ERROR, started.message, false);
+            console.log(`game not found] gameId:${gameId} not found`);
             return
         }
 
-        io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_STARTED, started);
+        //game starts
+        const gameState = game.startGame(hostId);
+        
+        if (!gameState.status) {
+            io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_ERROR, gameState.message, false);
+            return
+        }
+        io.in(data.gameId).fetchSockets().then((sockets) => {
+            sockets.forEach(socket => {
+                const isInTeam1 = gameState.team1.teamPlayers.some((_, playerData) => playerData.socketId == socket.id)
+                if (isInTeam1) {
+                    socket.join(gameState.team1.teamId);
+                } else {
+                    socket.join(gameState.team2.teamId);
+                }
+            });
+        })
+        
+        io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_STARTING, gameState);
+    })
+    
+    //game running
+    socket.on(SocketEvents.GAME_RUN, (data) => {
+        const { gameId } = data;
+        console.log(gameId)
+        const game = gameLobby.getGameState(gameId);
+        if (!game) {
+            console.log(`[game not found] gameId:${gameId} not found`);
+            return
+        }
+
+        io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_RUNNING, { gameState: game.toJson({ teams: true }) });
+
     })
 
     //close room (host)

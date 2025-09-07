@@ -30,9 +30,6 @@ export class Game {
     }
 
     addPlayer(playerId, username, socketId, role = 'player') {
-        console.log("limit " + this.playerLimit)
-        console.log("player " + this.players.size)
-        console.log("socket id:" + socketId);
         if (this.players.size >= this.playerLimit) {
             return false
         }
@@ -58,11 +55,20 @@ export class Game {
 
     //TODO: find logic for splting member and complete code
     makeTeam() {
-        let team1, team2;
+        this.team1 = {
+            teamId: generateGameID(),
+            teamPlayers:[],
+        }
+        this.team2 = {
+            teamId: generateGameID(),
+            teamPlayers:[],
+        }
+
         const players = [...this.players];
         if (this.playerLimit == 2) {
-            this.team1 = [players[0]];
-            this.team2 = [players[1]];
+            this.team1.teamPlayers.push(players[0]);
+            this.team2.teamPlayers.push(players[1]);
+
             return {
                 status: true,
                 teamOne: this.team1,
@@ -74,13 +80,14 @@ export class Game {
         while (players.length > 0) {
             const player = players.pop(Math.random() * players.length);
             if (currentTeam == 1) {
-                this.team1.push(player);
+                this.team1.teamPlayers.push(player);
                 currentTeam = 2;
             } else {
-                this.team2.push(player);
+                this.team2.teamPlayers.push(player);
                 currentTeam = 1;
             }
         }
+        
         return {
             status: true,
             teamOne: this.team1,
@@ -136,7 +143,6 @@ export class Game {
         //question generation
         this.generateQuestions().then((result) => {
             this.questions.push(result);
-            console.log(this.questions);
         })
         this.state = GameState.STARTED;
         
@@ -144,10 +150,8 @@ export class Game {
             message: "game started",
             status: true,
             gameId: this.gameId,
-            teams: {
-                team1: this.team1,
-                team2: this.team2,
-            },
+            team1: this.team1,
+            team2:this.team2,
             gameStarted:false //does game move from lobbby or not
         }
     }
@@ -184,8 +188,8 @@ export class Game {
         
     }
 
-    toJson() {
-        return {
+    toJson({ password = false, teams = false } = {}) {
+        let response = {
             host: this.host,
             gameName: this.gameName,
             category: this.category,
@@ -193,8 +197,23 @@ export class Game {
             players: [...this.players],
             gameId: this.gameId,
             state: this.state,
-            secure: this.secure,
-            password: this.password
         }
+        if (password) {
+            response = {
+                ...response,
+                secure: this.secure,
+                password: this.password
+            }
+        }
+
+        if (teams) {
+            response = {
+                ...response,
+                teamOne: this.team1,
+                teamTwo:this.team2,
+            }
+                
+        }
+        return response
     }
 }

@@ -59,7 +59,7 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const dispatch = useDispatch()
 
-  const { data:category, loading, error, getFetch } = useFetch<CategoryType[]>('/admin/category');
+  const { data:category, loading, error, getFetch } = useFetch<CategoryType[]>('/game/categorys');
 
   const { handleSubmit, register, reset, formState: { errors } } = useForm<RoomTypes>({
     resolver: yupResolver(InputSchema),
@@ -159,7 +159,8 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
                             ))
                           }
                           </select>
-                          {errors.category && <p className="text-red-500">{ errors.category.message }</p>}
+                          {errors.category && <p className="text-red-500">{errors.category.message}</p>}
+                          {error && <p className="text-red-500">{ error }</p>}
                         </div>
                        }
 

@@ -110,7 +110,6 @@ const AdminController = {
     getCategorys: async (req, res, next) => {
         try {
             const categorys = await Category.find().lean();
-            console.log(categorys)
             return res.status(200).json({ message: "Category Sended", success: true, data: categorys });
         } catch (error) {
             console.error('[Category Query Error]', error.message);
