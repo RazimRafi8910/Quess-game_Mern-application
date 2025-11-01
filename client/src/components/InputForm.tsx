@@ -5,7 +5,7 @@ type InputFormProps = {
     inputType: string;
     inputError?: FieldError;
     label: keyof RoomTypes;
-    htmlLabel: string;
+    htmlLabel?: string;
     placeholder: string;
     required?: boolean;
     register: UseFormRegister<RoomTypes>;

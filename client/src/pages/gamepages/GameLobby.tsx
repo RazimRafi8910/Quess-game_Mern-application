@@ -48,8 +48,7 @@ function GameLobby() {
                 ...data.gameState,
                 players : new Map(players)
             })
-            console.log(game)
-            console.log("calleded")
+            console.log("game updated")
         }
 
         const handleGameError = (message:string,showtoast=true,doNavigate = false) => {
@@ -63,12 +62,14 @@ function GameLobby() {
             }
         }
 
-        const handleGameStart = async (result: { status: boolean, gameId: string, message: string, gameStarted: boolean }) => {
-            console.log("start clicked")
-            console.log(game);
-            if (result.status) {
+        const handleGameStart = async (result: { status: boolean, message: string, gameStarted: boolean, game:GameRoomType }) => {
+            
+            //some closure topic, stack remember the variable
+            const newGameState = result.game;
+            console.log(result);
+            if (result.status) {    
                 if (result.gameStarted) {
-                    navigate(`/game/${result.gameId}`, { state: { game } });
+                    navigate(`/game/${newGameState?.gameId}`, { state: { game: newGameState } });
                     return
                 }
 
@@ -82,7 +83,7 @@ function GameLobby() {
                     });
                 },1000)
                 setTimeout(() => {
-                    navigate(`/game/${result.gameId}`, { state: { game:game } });
+                    navigate(`/game/${newGameState?.gameId}`, { state: { game: newGameState } });
                     clearInterval(interval)
                 }, 5000);
                 

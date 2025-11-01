@@ -7,7 +7,8 @@ export const SocketEvents = {
     START_GAME: 'start_game',
     GAME_RUN:'game_run',
     PLAYER_UPDATE:'player_update',
-    SOCKET_ERROR: 'socket_error'
+    SOCKET_ERROR: 'socket_error',
+    GAME_QUESTION:'game_question'
 }
 
 export const GameState = {
@@ -23,7 +24,8 @@ export const ServerSocketEvents = {
     CONNECTION:'connection',
     DISCONNECT: 'disconnect',
     GAME_ROOM_CLOSED: 'room_closed',
-    GAME_ROOM_STARTING:'room_starting',
+    GAME_ROOM_STARTING: 'room_starting',
+    GAME_ROOM_QUESTION:'game_question_update',
     LOBBY_PLAYER_UPDATE: 'current_players',
     LOBBY_ROOM_UPDATE: 'current_rooms',
     GAME_ROOM_UPDATE: 'room_update',

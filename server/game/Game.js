@@ -53,7 +53,6 @@ export class Game {
         return true
     }
 
-    //TODO: find logic for splting member and complete code
     makeTeam() {
         this.team1 = {
             teamId: generateGameID(),
@@ -142,16 +141,20 @@ export class Game {
 
         //question generation
         this.generateQuestions().then((result) => {
-            this.questions.push(result);
+            if (!result) {
+                this.questions = false
+            }
+            this.questions = result;
+        }).catch((e) => {
+            this.questions = false
         })
+        
         this.state = GameState.STARTED;
         
         return {
             message: "game started",
             status: true,
-            gameId: this.gameId,
-            team1: this.team1,
-            team2:this.team2,
+            game: this.toJson({ password: false, teams: true, questions:true }),
             gameStarted:false //does game move from lobbby or not
         }
     }
@@ -163,6 +166,41 @@ export class Game {
             return null
         }
         return result.question
+    }
+
+    async getQuestion() {
+        if (this.questions == false) {
+            const result = await this.generateQuestions();
+            this.questions = result;
+            if (!this.questions || this.questions.length == 0) {
+                return {
+                    status: false,
+                    error: true,
+                    message:"failed to generate question",
+                }
+            }
+            return {
+                status: true,
+                error: false,
+                messsage:"question created",
+                question: this.questions
+            }
+        }
+        if (this.questions !== undefined || this.questions.length != 0) {
+            return {
+                status: true,
+                error:false,
+                message:"qestion created",
+                question:this.questions
+            }
+        } else {
+            return {
+                status: false,
+                error:false,
+                message: "qestion creating",
+                question:[]
+            }
+        }
     }
 
     removePlayer(playerId) {
@@ -188,7 +226,7 @@ export class Game {
         
     }
 
-    toJson({ password = false, teams = false } = {}) {
+    toJson({ password = false, teams = false, questions = false } = {}) {
         let response = {
             host: this.host,
             gameName: this.gameName,
@@ -213,6 +251,13 @@ export class Game {
                 teamTwo:this.team2,
             }
                 
+        }
+
+        if (questions) {
+            response = {
+                ...response,
+                questions:this.questions
+            }
         }
         return response
     }

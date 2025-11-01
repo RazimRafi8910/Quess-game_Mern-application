@@ -128,21 +128,21 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
         {/* Modal Content */}
         <div
           ref={modalRef}
-          className="relative transform overflow-hidden rounded-lg bg-black text-left shadow-xl transition-all sm:my-8 w-full mx-2 md:mx-0 max-w-lg"
+          className="relative transform overflow-hidden rounded-2xl bg-black text-left shadow-xl transition-all sm:my-8 w-full mx-2 md:mx-0 max-w-lg"
         >
           <form onSubmit={handleSubmit(onCreate)}>
           {/* Modal Header and Content */}
           <div className="bg-black/75 px-4 pt-5 pb-4 sm:p-6">
             <div className="">
               <div className="mt-3 sm:mt-0 sm:ml-4 text-left">
-                <h2 className="text-lg font-semibold text-gray-200" id="modal-title">Create Room</h2>
+                <h2 className="text-2xl font-semibold text-gray-200" id="modal-title">Create Room</h2>
                 <div className="">
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm ms-1 text-gray-400">
                     Create a Room and Invite your Frients
                   </p>
                 </div>
                 {/* from */}
-                <div className="mt-2">
+                <div className="mt-3">
                   <InputForm htmlLabel="Room name" label="roomName" inputType="text" placeholder="Room name" inputError={errors.roomName} register={register} required={true}  />
                   
 
@@ -164,15 +164,16 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
                         </div>
                        }
 
-                    { showPassword && <InputForm htmlLabel="Password" label="password" inputType="text" placeholder="password" inputError={errors.password} register={register} required={true} /> }
 
                   <div className="mb-2 mt-3">                    
-                      <label className="inline-flex items-center cursor-pointer">
+                      <label className="flex justify-between cursor-pointer">
                         <input type="checkbox" value="" onChange={()=>{ setShowPassword(!showPassword) }} className="sr-only peer"/>
+                        <label className="block my-1 text-sm font-medium text-gray-900 dark:text-white">Password</label>
                         <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
-                        <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Password</span>
                       </label>
                     </div>
+
+                    { showPassword && <InputForm htmlLabel="" label="password" inputType="text" placeholder="password" inputError={errors.password} register={register} required={true} /> }
                     
                   <div className="mb-2">
                     <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">No. Players</label>
@@ -195,14 +196,14 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
           <div className="bg-black/75 px-4 py-3 flex flex-row-reverse sm:px-6">
             <button
               type="submit"
-              className="inline-flex justify-center rounded-md mx-1 bg-indigo-800 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-green-700 w-auto mt-3"
+              className="inline-flex justify-center rounded-md mx-1 bg-gray-200 px-3 py-2 text-sm font-semibold ring-1 ring-gray-500 text-gray-800 shadow-xs hover:bg-green-700 w-auto mt-3"
               >
               Create
             </button>
             <button
               type="button"
               onClick={handleCloseModal}
-              className="mt-3 inline-flex justify-center rounded-md mx-1 bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-red-400 "
+              className="mt-3 inline-flex justify-center rounded-md mx-1 bg-neutral-950 px-3 py-2 text-sm font-semibold text-white ring-1 shadow-xs ring-gray-800 ring-inset w-auto mt-3 hover:bg-red-400 "
               >
               Cancle
             </button>
