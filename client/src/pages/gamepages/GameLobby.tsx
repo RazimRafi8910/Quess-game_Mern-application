@@ -65,8 +65,11 @@ function GameLobby() {
         const handleGameStart = async (result: { status: boolean, message: string, gameStarted: boolean, game:GameRoomType }) => {
             
             //some closure topic, stack remember the variable
-            const newGameState = result.game;
-            console.log(result);
+            const newGameState:GameRoomType = {
+                ...result.game,
+                players: new Map(result.game.players)
+            };
+            
             if (result.status) {    
                 if (result.gameStarted) {
                     navigate(`/game/${newGameState?.gameId}`, { state: { game: newGameState } });
@@ -115,8 +118,12 @@ function GameLobby() {
         if (userId === game?.host.user_id) {
             socket?.emit(SocketEvents.CLOSE_ROOM, { gameId: game?.gameId, playerId: userId });
         }
-        socket?.emit(SocketEvents.LEAVE_ROOM, { gameId: game?.gameId, playerId: userReducer.user?.id });
-        navigate('/room');
+        socket?.emit(SocketEvents.QUIT_GAME, { gameId: game?.gameId, playerId: userReducer.user?.id }, ((response: { status: boolean, message?: string }) => {
+            if (!response.status) {
+                console.log(response.message);
+            }
+            navigate('/room', { replace: true });
+        }));
     }
 
     const handlePlayerReady = (playerStatus: boolean, playerId?: string) => {
@@ -161,8 +168,8 @@ function GameLobby() {
                       <hr className="border-neutral-600" />
                       <div className="grid grid-flow-row grid-cols-2 md:grid-cols-4 gap-1 p-2">
                           {game?.players && game.players.size > 0 &&
-                              [...game.players].map((player) => (                                  
-                                  <UserCard key={player[0]} userReady={player[1].isReady} username={player[1].username} host={player[1].role} />
+                              [...game.players].map((player) => (                               
+                                  player[1].status && <UserCard key={player[0]} userReady={player[1].isReady} username={player[1].username} host={player[1].role} />
                               ))
                           }
                       </div>

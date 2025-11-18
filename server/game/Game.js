@@ -1,6 +1,6 @@
 import { getQuestionsByCategory } from '../services/questions.js';
 import { generateGameID } from '../utils/idGenerator.js';
-import { GameState } from '../utils/constants.js'
+import { GameState, PlayerRoles } from '../utils/constants.js'
 
 
 export class Game {
@@ -12,8 +12,9 @@ export class Game {
         this.players = new Map([
             [this.host.user_id, {
                 username: this.host.username,
-                role: 'host',
-                isReady: false,
+                role: PlayerRoles.HOST,
+                isReady: false, // ready in game lobby
+                status:true, //present in game or not
                 socketId:hostSocketId,
             }]
         ]);
@@ -29,7 +30,7 @@ export class Game {
         console.log(this.secure)
     }
 
-    addPlayer(playerId, username, socketId, role = 'player') {
+    addPlayer(playerId, username, socketId, role = PlayerRoles.PLAYER) {
         if (this.players.size >= this.playerLimit) {
             return false
         }
@@ -39,6 +40,7 @@ export class Game {
         const newPlayer = {
             username: username,
             isReady: false,
+            status:true,
             role,
             socketId,
         }
@@ -204,26 +206,47 @@ export class Game {
     }
 
     removePlayer(playerId) {
-        if (this.players.has(playerId)) {
-
-            if (playerId == this.host.user_id) {
-                return {
-                    status: false,
-                    host:true
-                }
-            }
-
-            this.players.delete(playerId);
+        if (!this.players.has(playerId)) {
             return {
-                status: true,
-                host:false,
-            } // player removed successfully
+                status: false,
+                host: false,
+                message: 'player not found',
+            }
         }
+        const isHost = playerId === this.host.user_id;
+
+        //for games in lobbys
+        if (this.state == GameState.LOBBY) {
+            this.players.delete(playerId)
+            return {
+                host: isHost,
+                status:true
+            }
+        }
+
+        const player = this.players.get(playerId);
+        this.players.set(playerId, {
+                ...player,
+                status: false,
+                isReady:false,
+        });
+        console.log("remove player "+ player.username)
+        if (player.role === PlayerRoles.HOST) {
+            const newHost = Array.from(this.players.entries()).find((item) => {
+                return item[1].role == PlayerRoles.PLAYER ;
+            })
+            this.host = {
+                username: newHost[1].username,
+                user_id:newHost[0]
+            }
+            //console.log(this.host)
+        }
+
         return {
-            status: false,
-            host:false
-        }; // player not found
-        
+            host: isHost,
+            status: true,
+            newGameState: this.toJson(),
+        }
     }
 
     toJson({ password = false, teams = false, questions = false } = {}) {

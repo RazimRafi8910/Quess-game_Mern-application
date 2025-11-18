@@ -1,4 +1,5 @@
 import { ServerSocketEvents, SocketEvents, GameState } from "../utils/constants.js";
+import { validateSocketRoom } from './socketHelper.js';
 
 function handleSocketError(error) {
     return
@@ -58,7 +59,6 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
 
     //player start status update
     socket.on(SocketEvents.PLAYER_UPDATE, (data) => {
-        console.log(socket.rooms)
         const game = gameLobby.getGameState(data.gameId)
         if (!game) {
             socket.emit(ServerSocketEvents.SOCKET_ERROR, "Game not found")
@@ -108,9 +108,12 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
     })
     
     //send generated questions
-    socket.on(SocketEvents.GAME_QUESTION, async({gameId},callback) => {
+    socket.on(SocketEvents.GAME_QUESTION, async ({ gameId }, callback) => {
+        if (!validateSocketRoom(socket, gameId)) {
+            callback({ status: false, error: true, message: "Not belong to this room" });
+            return io.to(gameId).emit(ServerSocketEvents.SOCKET_ERROR, { message: "Not belong to this room", redirect: true });
+        }
         const game = gameLobby.getGameState(gameId);
-        console.log(gameId)
         if (!game) {
             callback({ status: false, error: true, message: "Invalid game id or missing game, please leave the game" });
             return io.to(gameId).emit(ServerSocketEvents.SOCKET_ERROR, { message: "invalid game Id", redirect: true });
@@ -119,7 +122,11 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         try {
             const questionStatus = await game.getQuestion();
             //acknowledgment cb for frontend state update
-            callback(questionStatus);
+            const response = {
+                ...questionStatus,
+                game: game.toJson(),
+            }
+            callback(response);
         } catch (error) {
             callback({ status: false, error: true, message: error.message });
         }
@@ -128,7 +135,6 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
     //game running
     socket.on(SocketEvents.GAME_RUN, (data) => {
         const { gameId } = data;
-        console.log(gameId)
         const game = gameLobby.getGameState(gameId);
         if (!game) {
             console.log(`[game not found] gameId:${gameId} not found`);
@@ -139,22 +145,51 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
 
     })
 
+    //quit game (host&player)
+    socket.on(SocketEvents.QUIT_GAME, ({ gameId, playerId }, callback) => {
+        const game = gameLobby.getGameState(gameId);
+        console.log("quit evetnt from ", socket.id, "playerId", playerId);
+        if (!socket.rooms.has(gameId)) {
+            console.log("gameid")
+            socket.emit(ServerSocketEvents.GAME_ROOM_ERROR, { message: "You are not belong to this room or closed", redirect: true });
+            return
+        }
+        
+        if (!game) {
+            io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_ERROR, { message: "invalid or missing game Id", redirect: false });
+            socket.leave(gameId);
+            return
+        }
+
+        const result = game.removePlayer(playerId);
+        if (!result.status) return io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_ERROR, { message: "player not removed from game", redirect: false });
+        socket.leave(gameId);
+        console.log(result.newGameState);
+
+        callback({ status: result.status });
+        io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState:result.newGameState });
+
+    });
+
     //close room (host)
-    socket.on(SocketEvents.CLOSE_ROOM, ({gameId,playerId}) => {
+    socket.on(SocketEvents.CLOSE_ROOM,async ({gameId,playerId}) => {
         const game = gameLobby.getGameState(gameId);
         if (!game) {
             return
         }
+        
         if (game.host.user_id !== playerId) {
             console.error("[game close error] player is not host");
             socket.emit(ServerSocketEvents.GAME_ROOM_ERROR,"Player is not host")
             return;
         }
+        io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_CLOSED, "Game is closed by the Host");        
+        const socketsInRoom = await io.in(gameId).fetchSockets();
+        socketsInRoom.forEach((socketInstance) => {
+            socketInstance.leave(gameId);
+        });
         const status = gameLobby.removeGameState(gameId);
-        if (status) {
-            io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_CLOSED, "Game is closed by the Host");
-        }
-        io.emit(ServerSocketEvents.LOBBY_ROOM_UPDATE, { data: gameLobby.getAllGameRooms() });
+        if (status) io.emit(ServerSocketEvents.LOBBY_ROOM_UPDATE, { data: gameLobby.getAllGameRooms() });
     })
 
     //player disconnect
@@ -176,10 +211,12 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             gameLobby.removeGameState(gameId);
             io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_CLOSED, {message:"Host disconnected from the game"});
             io.emit(ServerSocketEvents.LOBBY_ROOM_UPDATE, { data: gameLobby.getAllGameRooms() });
+            socket.leave(gameId)
             return
         }
+        
+        socket.leave(gameId)
         io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() });
-
     })
     
 }

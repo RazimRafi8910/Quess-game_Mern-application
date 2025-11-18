@@ -26,6 +26,7 @@ export enum SocketEvents {
     LEAVE_ROOM = 'leave_room',
     CLOSE_ROOM = 'close_room',
     START_GAME = 'start_game',
+    QUIT_GAME = 'quit_game',
     PLAYER_UPDATE = 'player_update',
     SOCKET_ERROR = 'socket_error'
 }
@@ -50,7 +51,7 @@ export type QuestionType = {
     category: string
     playerState?: {
         questionStatus: QuestionStatus,
-        answeredOption: Options,
+        answeredOption: Options | null,
     }
 }
 
@@ -68,9 +69,11 @@ export type CategorysType = {
 }
 
 export type GameRoomPlayerType = {
-    username: string,
+    playerId?:string
+    username: string
     role: 'host' | 'player'
     isReady: boolean
+    status:boolean // player online status
     socketId:string
 }
 
