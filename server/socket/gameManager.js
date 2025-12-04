@@ -8,7 +8,7 @@ function handleSocketError(error) {
 export function handleSocketGameEvent(io, socket, gameLobby) {
 
     // room join
-    socket.on(SocketEvents.JOIN_ROOM, (data) => {
+    socket.on(SocketEvents.JOIN_ROOM, (data,callback) => {
         const { gameId, playerId, username } = data;
 
         const game = gameLobby.getGameState(gameId);
@@ -16,6 +16,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             console.warn(`[JOIN_ROOM] Invalid room ID: ${gameId}, socket: ${socket.id}`);
             socket.emit(ServerSocketEvents.GAME_ROOM_ERROR, "Game not found", true, true);
             socket.leave(gameId);
+            callback({ status: false });
             return;
         }
 
@@ -23,6 +24,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             if (game.state == GameState.STARTED) {
                 io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_STARTED, { status: true, gameId,gameStarted:true });
             }
+            callback({ status: true });
             io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() });
             return;
         }
@@ -32,11 +34,21 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         const joined = game.addPlayer(playerId, username, socket.id);
         if (!joined) {
             socket.leave(gameId);
+            callback({ status: false });
             socket.emit(ServerSocketEvents.SOCKET_ERROR, "Room is Full")
             return
         }
+        callback({ status: true });
         io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() }); //to json convert data to json format
     });
+
+    socket.on(SocketEvents.GAME_STATE, ({ gameId },callback) => {
+        if (!gameId) return callback({ state: false, message: "no game Id" });
+
+        const game = gameLobby.getGameState(gameId);
+
+        callback({ status: true, message: "game found", gameState: game.toJson() });
+    })
 
     // room leaving
     socket.on(SocketEvents.LEAVE_ROOM, (data) => {
@@ -127,23 +139,28 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
                 game: game.toJson(),
             }
             callback(response);
+            //game Timer starts
+            const result = game.startGameTimer();
+            if (result) {
+            io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_TIME_UPDATE, result);
+            }
         } catch (error) {
             callback({ status: false, error: true, message: error.message });
         }
     })
 
-    //game running
-    socket.on(SocketEvents.GAME_RUN, (data) => {
-        const { gameId } = data;
-        const game = gameLobby.getGameState(gameId);
-        if (!game) {
-            console.log(`[game not found] gameId:${gameId} not found`);
-            return
-        }
+    // unused code (maybe,testing)
+    // socket.on(SocketEvents.GAME_RUN, (data) => {
+    //     const { gameId } = data;
+    //     const game = gameLobby.getGameState(gameId);
+    //     if (!game) {
+    //         console.log(`[game not found] gameId:${gameId} not found`);
+    //         return
+    //     }
 
-        io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_RUNNING, { gameState: game.toJson({ teams: true }) });
+    //     io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_RUNNING, { gameState: game.toJson({ teams: true }) });
 
-    })
+    // })
 
     //quit game (host&player)
     socket.on(SocketEvents.QUIT_GAME, ({ gameId, playerId }, callback) => {

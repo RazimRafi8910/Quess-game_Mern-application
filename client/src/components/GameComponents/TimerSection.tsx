@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useImperativeHandle,forwardRef } from "react";
 import DeleteModal from "../modal/DeleteModal";
 import {Socket} from 'socket.io-client'
 import { GameRoomPlayerType, GameRoomType, ServerSocketEvnets, SocketEvents } from "../../types";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 type Props = {
     socket: Socket | null,
     game: GameRoomType | null,
-    currentPlayer:GameRoomPlayerType | null
+	currentPlayer: GameRoomPlayerType | null
+	handleEndTimer: ()=> void // for handling logic after the time finish
 }
 
 type QuitResponse = {
@@ -15,49 +17,77 @@ type QuitResponse = {
 	message?:string
 }
 
-function TimerSection({socket,game,currentPlayer}:Props) {
-    const [timer, setTimer] = useState();
+export interface TimerSectionRef {
+    getTimer:() => number
+}
+
+const TimerSection = forwardRef<TimerSectionRef, Props>((props, ref) => {
+	const {socket,game,currentPlayer,handleEndTimer} = props
+    const [timer, setTimer] = useState(0);
 	const [modal, setModal] = useState(false);
-	const navigate = useNavigate()
-	const [error, setError] = useState('');
-    const [opensetting, setOpenSettings] = useState(false);
+	const [opensetting, setOpenSettings] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
+	const navigate = useNavigate()
+	let timerIntervel:number;
 	
+	function startTimer(endTime:number) {
+		clearInterval(timerIntervel)
+		const updateTime = () => {
+			const remaining = Math.floor((endTime - Date.now()) / 1000);
+			setTimer(remaining)
+
+			if (remaining <= 0) {
+				clearInterval(timerIntervel);
+				handleEndTimer()
+			}
+		}
+
+		timerIntervel = setInterval(updateTime, 1000);
+	}
 
 	useEffect(() => {
 		const handleSocketError = (res: { message: string, redirect: boolean }) => {
 			console.log(res.message)
 			if (res.message) {
-				setError(res.message);
+				toast.error(res.message)
 		  	}
 		  	if (res.redirect) {
 				navigate('/');
 		  	}
 		};
+
+		const handleGameTimerUpdate = ({ status,endTime }:{status:boolean,startTime:number,endTime:number})=>{
+			if (!status) return null
+			startTimer(endTime)
+		}
+
+		socket?.on(ServerSocketEvnets.GAME_ROOM_TIME_UPDATE,handleGameTimerUpdate)
 		socket?.on(ServerSocketEvnets.GAME_ROOM_ERROR, handleSocketError);
 		return () => {
-		  socket?.off(ServerSocketEvnets.GAME_ROOM_ERROR, handleSocketError);
-			};
-	  },[])
+			socket?.off(ServerSocketEvnets.GAME_ROOM_ERROR, handleSocketError);
+			clearInterval(timerIntervel);
+		};
+	}, [])
+
+	//this is the function that is used to taking the timer state from here to game page using ref
+	useImperativeHandle(ref, () => ({ getTimer: () => timer }));
     
     // close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event:MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setOpenSettings(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  	useEffect(() => {
+    	const handleClickOutside = (event:MouseEvent) => {
+      	if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        	setOpenSettings(false);
+      	}
+    	};
+    	document.addEventListener("mousedown", handleClickOutside);
+    	return () => document.removeEventListener("mousedown", handleClickOutside);
+  	}, []);
     
 	const handlePlayerQuit = () => {
-		console.log("called")
         socket?.emit(SocketEvents.QUIT_GAME, { gameId: game?.gameId, playerId: currentPlayer?.playerId }, (response: QuitResponse) => {
 			if (!response.status) {
 				console.log(response.message);
 			}
-			console.log("done")
 			navigate('/room', { replace: true, state: {} });
 		})
     }
@@ -77,7 +107,7 @@ function TimerSection({socket,game,currentPlayer}:Props) {
 				</div>
 				<div>
 					<h1 className="text-3xl font-bold text-emerald-300 mt-1">
-						12:29
+						{ Math.floor(timer / 60) } : { String(timer % 60).padStart(2,'0') }
 					</h1>
 				</div>
 				<div ref={dropdownRef} className="relative">
@@ -116,5 +146,5 @@ function TimerSection({socket,game,currentPlayer}:Props) {
 		</>
 	);
 }
-
+)
 export default TimerSection;

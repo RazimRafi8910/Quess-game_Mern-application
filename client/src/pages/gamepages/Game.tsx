@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import OptionDIv from "../../components/GameComponents/OptionDIv";
-import TimerSection from "../../components/GameComponents/TimerSection";
+import TimerSection, { TimerSectionRef } from "../../components/GameComponents/TimerSection";
 import ChatBox from "../../components/ChatComponents/ChatBox";
 import { useOutletContext, useLocation, useParams, useNavigate } from 'react-router-dom';
 import { Socket } from 'socket.io-client';
@@ -8,12 +8,16 @@ import { GameRoomPlayerType, GameRoomType, QuestionOptionType, QuestionStatus, Q
 import AnswerIndicator from "../../components/GameComponents/AnswerIndicator";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
+import SubmitModal from "../../components/modal/SubmitModal";
 
 function Game() {
   const { id: gameId } = useParams();
+  const timerRef = useRef<TimerSectionRef|null>(null);
   const socket = useOutletContext<Socket | null>();
   const location = useLocation()
   const navigate = useNavigate();
+  const [submit, setSubmit] = useState(false);
+  const [gameState, setGameState] = useState<"Running" | "Finished">('Running');
   const userReducer = useSelector((state: RootState) => state.userReducer);
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [error, setError] = useState<string>('')
@@ -42,6 +46,7 @@ function Game() {
 		};
   }, [])
   
+  //TODO: cutom done
   const handleGameStateUpdate = ( response:{ gameState: GameRoomType }) => {
       console.log("from game update:");
       console.log(response.gameState.players)
@@ -64,7 +69,7 @@ function Game() {
     
   }, []);
 
-
+  //TODO :add cutom  done
   //get new question
   useEffect(() => {
     socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: { game: GameRoomType, status: boolean, error?: boolean, message: string, question: QuestionType[] }) => {
@@ -114,6 +119,14 @@ function Game() {
     })
   }
   
+  const handleEndTimer = () => {
+    setGameState('Finished')
+  }
+
+  const handleSubmit = () => {
+    console.log(timerRef?.current?.getTimer())
+    setSubmit(true)
+  }
 
   const handeleSelect = (option: QuestionOptionType['option']) => {
     updatePlayerQuestionState(option, QuestionStatus.ANSWERED);
@@ -128,7 +141,8 @@ function Game() {
       <div className="container mx-auto">
         <div className="flex justify-center">
           <div className="md:w-1/2 md:mx-0 w-full mx-10">
-            <TimerSection socket={socket} game={game} currentPlayer={currentPlayer as GameRoomPlayerType} />
+            <SubmitModal isOpen={submit} toggle={setSubmit} gameState={gameState} timeTaken={timerRef.current?.getTimer}  handleSubmit={handleSubmit} />
+            <TimerSection ref={timerRef} socket={socket} game={game} handleEndTimer={handleEndTimer} currentPlayer={currentPlayer as GameRoomPlayerType} />
             
             <div>
               <p className="text-md text-red-500 text-center">{ error }</p>
@@ -153,18 +167,13 @@ function Game() {
                       <OptionDIv key={index} option={item.option} questionStatus={gameQuestion[currentQuestion].playerState} optionValue={item.optionValue} handleSelect={handeleSelect} />
                     ))
                   }
-                  {/* <OptionDIv option="B" optionValue="for the test" currentSelectOption={ selected } handleSelect={handeleSelect} />
-                  <OptionDIv option="C" optionValue="test" currentSelectOption={ selected } handleSelect={handeleSelect}/>
-                  <OptionDIv option="D" optionValue="manual" currentSelectOption={ selected } handleSelect={handeleSelect}/> */}
                 </div>
               </>
 
                 :
                 <p className="text-red-500 text-base">Failed to load question<a className="ms-2 text-amber-600 underline" href="/">/home</a></p>
               
-            }        
-
-           
+            }
 
             
             <div className="mt-2">
@@ -174,7 +183,7 @@ function Game() {
                 {
                   gameQuestion &&
                   gameQuestion.length-1 === currentQuestion ? 
-                    <button className="text-white bg-orange-900 px-5 py-2 rounded-lg hover:bg-green-300 hover:text-neutral-800" onClick={handleNextQuestion}>Submit</button>
+                    <button className="text-white bg-orange-900 px-5 py-2 rounded-lg hover:bg-green-300 hover:text-neutral-800" onClick={()=> setSubmit(true)}>Submit</button>
                     :
                     <button className="text-white bg-blue-900 px-5 py-2 rounded-lg hover:bg-green-300 hover:text-neutral-800" onClick={handleNextQuestion}>Next</button>
                 }

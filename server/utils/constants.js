@@ -6,7 +6,8 @@ export const SocketEvents = {
     CLOSE_ROOM: 'close_room',
     START_GAME: 'start_game',
     QUIT_GAME:'quit_game',
-    GAME_RUN:'game_run',
+    GAME_RUN: 'game_run',
+    GAME_STATE:'game_state', // for getting the game state
     PLAYER_UPDATE:'player_update',
     SOCKET_ERROR: 'socket_error',
     GAME_QUESTION:'game_question'
@@ -34,7 +35,9 @@ export const ServerSocketEvents = {
     LOBBY_PLAYER_UPDATE: 'current_players',
     LOBBY_ROOM_UPDATE: 'current_rooms',
     GAME_ROOM_UPDATE: 'room_update',
+    GAME_ROOM_TIME_END: 'time_end',
+    GAME_ROOM_TIME_UPDATE:'time_update',
     GAME_ROOM_ERROR:'game_error',
     SOCKET_ERROR: 'socket_error',
-    GAME_ROOM_RUNNING:'game_running',
+    GAME_ROOM_RUNNING:'game_running', //not used (maybe)
 }

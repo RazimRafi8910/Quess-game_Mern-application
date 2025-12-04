@@ -18,6 +18,9 @@ export class Game {
                 socketId:hostSocketId,
             }]
         ]);
+        this.gameStartedTime = null;
+        this.gameTime = 300;
+        this.gameEndAt = null;
         this.questions = [];
         this.gameId = generateGameID();
         this.state = GameState.LOBBY;
@@ -27,7 +30,6 @@ export class Game {
             this.password = password;
             this.secure = true
         }
-        console.log(this.secure)
     }
 
     addPlayer(playerId, username, socketId, role = PlayerRoles.PLAYER) {
@@ -205,6 +207,18 @@ export class Game {
         }
     }
 
+    startGameTimer() {
+        const currentTime = Date.now();
+        this.gameStartedTime = currentTime;
+        this.gameEndAt = currentTime + this.gameTime * 1000;
+        return {
+            status: true,
+            startTime: this.gameStartedTime,
+            endTime:this.gameEndAt,
+            message:"timer started"
+        }
+    }
+
     removePlayer(playerId) {
         if (!this.players.has(playerId)) {
             return {
@@ -240,6 +254,11 @@ export class Game {
                 user_id:newHost[0]
             }
             //console.log(this.host)
+
+            this.players.set(newHost[0], {
+                ...newHost[1],
+                role:PlayerRoles.HOST
+            })
         }
 
         return {
@@ -258,6 +277,8 @@ export class Game {
             players: [...this.players],
             gameId: this.gameId,
             state: this.state,
+            gameEndAt: this.gameEndAt,
+            gameTime:this.gameTime,
         }
         if (password) {
             response = {

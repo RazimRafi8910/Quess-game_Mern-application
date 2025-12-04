@@ -162,10 +162,10 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
                           {errors.category && <p className="text-red-500">{errors.category.message}</p>}
                           {error && <p className="text-red-500">{ error }</p>}
                         </div>
-                       }
+                    }
 
 
-                  <div className="mb-2 mt-3">                    
+                  <div className="mb-2 mt-2">                    
                       <label className="flex justify-between cursor-pointer">
                         <input type="checkbox" value="" onChange={()=>{ setShowPassword(!showPassword) }} className="sr-only peer"/>
                         <label className="block my-1 text-sm font-medium text-gray-900 dark:text-white">Password</label>
@@ -174,19 +174,55 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
                     </div>
 
                     { showPassword && <InputForm htmlLabel="" label="password" inputType="text" placeholder="password" inputError={errors.password} register={register} required={true} /> }
-                    
-                  <div className="mb-2">
-                    <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">No. Players</label>
+
+                    <div className="mb-2 mt-2">                    
+                      <label className="flex justify-between cursor-pointer">
+                        <input type="checkbox" value="" disabled onChange={()=>{ console.log("ai clicked") }} className="sr-only peer"/>
+                        <label className="block my-1 text-sm font-medium text-gray-900 dark:text-gray-500">AI Questions <i className="fa-light fa-circle-info"></i> </label>
+                        <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+
+                  <div className="mb-2 flex justify-between">
+                    <label className="block mb-2 mt-1 text-sm font-medium text-gray-900 dark:text-white">No. Players</label>
                     <select
                       id="countries"
                       {...register('noPlayers',{required:true})}
-                      className="bg-gray-800/[0.5] border  border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block max-w-full min-w-40 p-2 dark:bg-gray-800/[0.5] dark:border-gray-600 dark:placeholder-gray-800 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                      className="bg-gray-800/[0.5] border  border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block max-w-full min-w-20 p-1 dark:bg-gray-800/[0.5] dark:border-gray-600 dark:placeholder-gray-800 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                       <option value={2} defaultValue={2}>2</option>
                       <option value={4}>4</option>
                       <option value={6}>6</option>
                       </select>
                       {errors.noPlayers && <p className="text-red-500">{ errors.noPlayers.message }</p>}
                     </div>
+
+
+                    <div className="mb-2 mt-2">                    
+                      <label className="min-w-max">
+                        <label className="block my-1 text-sm font-medium text-gray-900 dark:text-white">Difficulty level</label>
+                        <input type="range" value="" onChange={()=>{ console.log("ai clicked") }} className="w-full h-2 bg-gray-500 rounded-lg appearance-none cursor-pointer" style={{
+                            background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(1 / 2) * 100}%, #e5e7eb ${(1 / 2) * 100}%, #e5e7eb 100%)`
+                        }}/>
+                        {/* <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div> */}
+                      </label>
+                      <div className="flex justify-between mt-1 px-1">
+                      <span className={`text-sm font-medium text-gray-500`}>
+                        Easy
+                      </span>
+                      <span className={`text-sm font-medium text-gray-500`}>
+                        Medium
+                      </span>
+                      <span className={`text-sm font-medium text-gray-500`}>
+                        Hard
+                      </span>
+                      </div>
+                    </div>
+
+                    
+
+                    
+                    {/* end of modal body container */}
+
                 </div>
               </div>
             </div>
@@ -203,7 +239,7 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
             <button
               type="button"
               onClick={handleCloseModal}
-              className="mt-3 inline-flex justify-center rounded-md mx-1 bg-neutral-950 px-3 py-2 text-sm font-semibold text-white ring-1 shadow-xs ring-gray-800 ring-inset w-auto mt-3 hover:bg-red-400 "
+              className="mt-3 inline-flex justify-center rounded-md mx-1 bg-neutral-950 px-3 py-2 text-sm font-semibold text-white ring-1 shadow-xs ring-gray-800 ring-inset w-auto hover:bg-red-400 "
               >
               Cancle
             </button>

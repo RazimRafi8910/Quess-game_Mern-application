@@ -39,8 +39,8 @@ function GameLobby() {
         if (!userReducer || !socket || !lobbyId) return;
 
         const handleRoomUpdate = (data: { gameState: GameRoomType }) => {
+            console.log(data)
             const players = data.gameState.players;
-
             if (gameReducer.gameId == null) {
                 dispatch(setGameState({gameId:data.gameState.gameId,playerId:userReducer.user?.id}))
             }
@@ -169,7 +169,7 @@ function GameLobby() {
                       <div className="grid grid-flow-row grid-cols-2 md:grid-cols-4 gap-1 p-2">
                           {game?.players && game.players.size > 0 &&
                               [...game.players].map((player) => (                               
-                                  player[1].status && <UserCard key={player[0]} userReady={player[1].isReady} username={player[1].username} host={player[1].role} />
+                                  player[1].status && <UserCard key={player[0]} userReady={player[1].isReady} username={player[1].username} role={player[1].role} status={player[1].status} />
                               ))
                           }
                       </div>

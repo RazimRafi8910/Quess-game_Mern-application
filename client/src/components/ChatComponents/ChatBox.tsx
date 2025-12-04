@@ -17,13 +17,9 @@ function ChatBox({ Players }: Props) {
                         {
                             Players &&
                             Array.from(Players.values()).map((item,index) => (
-                                <PlayerCard key={index} playerName={item.username } role={item.role} color={ item.status ? index + 1 : 4} />       
+                                <PlayerCard key={index} playerName={item.username } status={item.status} role={item.role} color={ item.status ? index + 1 : 4} />       
                             ))
-                        }
-                        {/* <PlayerCard color={0} />
-                        <PlayerCard color={2} />
-                        <PlayerCard color={3} />
-                        <PlayerCard color={4} /> */}
+                        }                    
                     </div>
                     <ChatBubble/>
                 </div>
