@@ -16,7 +16,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             console.warn(`[JOIN_ROOM] Invalid room ID: ${gameId}, socket: ${socket.id}`);
             socket.emit(ServerSocketEvents.GAME_ROOM_ERROR, "Game not found", true, true);
             socket.leave(gameId);
-            callback({ status: false });
+            //callback({ status: false });
             return;
         }
 
@@ -24,7 +24,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             if (game.state == GameState.STARTED) {
                 io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_STARTED, { status: true, gameId,gameStarted:true });
             }
-            callback({ status: true });
+            //callback({ status: true });
             io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() });
             return;
         }
@@ -34,11 +34,11 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         const joined = game.addPlayer(playerId, username, socket.id);
         if (!joined) {
             socket.leave(gameId);
-            callback({ status: false });
+            //callback({ status: false });
             socket.emit(ServerSocketEvents.SOCKET_ERROR, "Room is Full")
             return
         }
-        callback({ status: true });
+        //callback({ status: true });
         io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() }); //to json convert data to json format
     });
 
@@ -46,6 +46,8 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         if (!gameId) return callback({ state: false, message: "no game Id" });
 
         const game = gameLobby.getGameState(gameId);
+
+        if (!game) return callback({ state: false,message: "game not found"});
 
         callback({ status: true, message: "game found", gameState: game.toJson() });
     })
@@ -117,6 +119,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         })
         
         io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_STARTING, gameState);
+        return
     })
     
     //send generated questions
@@ -173,13 +176,13 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         }
         
         if (!game) {
-            io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_ERROR, { message: "invalid or missing game Id", redirect: false });
+            socket.emit(ServerSocketEvents.GAME_ROOM_ERROR, { message: "invalid or missing game Id", redirect: false });
             socket.leave(gameId);
             return
         }
 
         const result = game.removePlayer(playerId);
-        if (!result.status) return io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_ERROR, { message: "player not removed from game", redirect: false });
+        if (!result.status) return socket.emit(ServerSocketEvents.GAME_ROOM_ERROR, { message: "player not removed from game", redirect: false });
         socket.leave(gameId);
         console.log(result.newGameState);
 

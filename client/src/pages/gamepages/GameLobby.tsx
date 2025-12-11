@@ -9,17 +9,18 @@ import { removeGameState, setGameState } from "../../store/slice/gameSlice"
 import DeleteModal from "../../components/modal/DeleteModal"
 import GameLobbyButton from "../../components/Buttons/GameLobbyButton"
 import { toast } from "react-toastify"
+import { useGameSocket } from "../../Hooks/useGameSocket"
 
 function GameLobby() {
     const { id: lobbyId } = useParams()
     const [error, setError] = useState<string>('');
-    const [game, setGame] = useState<GameRoomType | null>(null);
+    //const [game, setGame] = useState<GameRoomType | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [startTimer, setStartTimer] = useState(6);
     const userReducer = useSelector((state: RootState) => state.userReducer);
-    const gameReducer = useSelector((state: RootState) => state.gameReducer);
     const dispatch = useDispatch()
     const socket = useOutletContext<Socket | null>()
+    const { game,setGame } = useGameSocket({ socket: socket, gameId: lobbyId });
 
     const userId = userReducer.user?.id;
     const currentUser = useMemo(() => {
@@ -38,18 +39,18 @@ function GameLobby() {
     useEffect(() => {
         if (!userReducer || !socket || !lobbyId) return;
 
-        const handleRoomUpdate = (data: { gameState: GameRoomType }) => {
-            console.log(data)
-            const players = data.gameState.players;
-            if (gameReducer.gameId == null) {
-                dispatch(setGameState({gameId:data.gameState.gameId,playerId:userReducer.user?.id}))
-            }
-            setGame({
-                ...data.gameState,
-                players : new Map(players)
-            })
-            console.log("game updated")
-        }
+        // const handleRoomUpdate = (data: { gameState: GameRoomType }) => {
+        //     console.log(data)
+        //     const players = data.gameState.players;
+        //     if (gameReducer.gameId == null) {
+        //         dispatch(setGameState({gameId:data.gameState.gameId,playerId:userReducer.user?.id}))
+        //     }
+        //     setGame({
+        //         ...data.gameState,
+        //         players : new Map(players)
+        //     })
+        //     console.log("game updated")
+        // }
 
         const handleGameError = (message:string,showtoast=true,doNavigate = false) => {
             if (showtoast) {
@@ -58,19 +59,20 @@ function GameLobby() {
                 setError(message);
             }
             if (doNavigate) {
-              navigate('/room')  
+              navigate('/room')
             }
         }
 
         const handleGameStart = async (result: { status: boolean, message: string, gameStarted: boolean, game:GameRoomType }) => {
-            
+
             //some closure topic, stack remember the variable
             const newGameState:GameRoomType = {
                 ...result.game,
                 players: new Map(result.game.players)
             };
-            
-            if (result.status) {    
+            console.log(game)
+
+            if (result.status) {
                 if (result.gameStarted) {
                     navigate(`/game/${newGameState?.gameId}`, { state: { game: newGameState } });
                     return
@@ -89,7 +91,7 @@ function GameLobby() {
                     navigate(`/game/${newGameState?.gameId}`, { state: { game: newGameState } });
                     clearInterval(interval)
                 }, 5000);
-                
+
             } else {
                 toast.warning(result.message)
             }
@@ -100,20 +102,20 @@ function GameLobby() {
             navigate('/room');
         }
 
-        socket?.on(ServerSocketEvnets.GAME_ROOM_UPDATE, handleRoomUpdate);
+        //socket?.on(ServerSocketEvnets.GAME_ROOM_UPDATE, handleRoomUpdate);
         socket?.on(ServerSocketEvnets.GAME_ROOM_ERROR, handleGameError);
         socket?.on(ServerSocketEvnets.GAME_ROOM_CLOSED, handleGameClose);
         socket?.on(ServerSocketEvnets.GAME_ROOM_STARTING, handleGameStart);
 
         return () => {
-            socket?.off(ServerSocketEvnets.GAME_ROOM_UPDATE, handleRoomUpdate);
+            //socket?.off(ServerSocketEvnets.GAME_ROOM_UPDATE, handleRoomUpdate);
             socket?.off(ServerSocketEvnets.GAME_ROOM_ERROR, handleGameError);
-            socket.off(ServerSocketEvnets.GAME_ROOM_CLOSED, handleGameClose);
+            socket?.off(ServerSocketEvnets.GAME_ROOM_CLOSED, handleGameClose);
             socket?.off(ServerSocketEvnets.GAME_ROOM_STARTING, handleGameStart);
             dispatch(removeGameState());
         }
     }, [game])
-    
+
     const handleLeaveRoom = () => {
         if (userId === game?.host.user_id) {
             socket?.emit(SocketEvents.CLOSE_ROOM, { gameId: game?.gameId, playerId: userId });
@@ -168,7 +170,7 @@ function GameLobby() {
                       <hr className="border-neutral-600" />
                       <div className="grid grid-flow-row grid-cols-2 md:grid-cols-4 gap-1 p-2">
                           {game?.players && game.players.size > 0 &&
-                              [...game.players].map((player) => (                               
+                              [...game.players].map((player) => (
                                   player[1].status && <UserCard key={player[0]} userReady={player[1].isReady} username={player[1].username} role={player[1].role} status={player[1].status} />
                               ))
                           }
@@ -190,7 +192,7 @@ function GameLobby() {
                               </>
                           }
                           {/* <button className="bg-green-800 border border-gray-100 rounded-md text-white px-4 py-2" type="button">Ready</button> */}
-                      </div>    
+                      </div>
                           { userId == game?.host.user_id && <p className="text-red-500 text-end me-4 mt-2">{ error }</p> }
                   </div>
               </div>

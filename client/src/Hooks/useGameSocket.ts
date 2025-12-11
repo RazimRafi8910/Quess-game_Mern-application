@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { GameRoomType, QuestionType, ServerSocketEvnets, SocketEvents } from "../types";
+import { GameRoomType, GameStateType, ServerSocketEvnets, SocketEvents } from "../types";
 import { Socket } from "socket.io-client";
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
@@ -7,19 +7,19 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom"; 
 
 interface Props {
-    fetchQuestion: boolean
-    fetchGame: boolean
-    socket: Socket
-    gameId: string
+    socket: Socket | null
+    gameId: string | undefined
 }
 
 // TODO: complete the custom hook
+// TODO: REMOVE FETCH GAMESTATE AND GET QUESTION FROM THIS HOOK TO GAME PAGE (THOSE ARE NOT \WORING)
 
-export function useGameSocket({ fetchQuestion = false, fetchGame = false, socket, gameId }: Props) {
-    const [game, setGame] = useState<GameRoomType | null>(null);
+export function useGameSocket({ socket, gameId }: Props) {
+    const [game, setGame] = useState<GameRoomType | null>();
+    const [localgameState, setLocalGameState] = useState<GameStateType>(GameStateType.LOBBY);
     const [socketError, setSocketError] = useState('');
+    const [gameState, setGameState] = useState<GameStateType>(GameStateType.RUNNING);
     const [currentQuestion, setCurrentQuestion] = useState();
-    const [gameQuestion, setGameQuestion] = useState<QuestionType[]>();
     const userState = useSelector((state: RootState) => state.userReducer.user);
     const navigate = useNavigate();
     const currentPlayer = useMemo(() => {
@@ -30,13 +30,19 @@ export function useGameSocket({ fetchQuestion = false, fetchGame = false, socket
         }
     }, [game, userState]);
 
+
+    function updateGameState(gameState:GameRoomType) {
+        setGame({
+            ...gameState,
+            players: new Map(gameState.players)
+        });
+        return true
+    }
+
     useEffect(() => {
 
-        const handleGameUpdate = (response:{gameState:GameRoomType}) => {
-            setGame({
-                ...response.gameState,
-                players: new Map(response.gameState.players)
-            });
+        const handleGameUpdate = (response: { gameState: GameRoomType }) => {
+            updateGameState(response.gameState)
         }
 
         const handleSocketError = (response: { status: boolean, message: string, redirect:boolean }) => {
@@ -50,7 +56,7 @@ export function useGameSocket({ fetchQuestion = false, fetchGame = false, socket
         }
 
         const handleGameError = (response: { message: string, redirect: boolean }) => {
-            if (response.message) toast.error(response.message);
+            if (response.message) setSocketError(response.message);
             if (response.redirect) {
                 navigate('/')
             }
@@ -63,44 +69,21 @@ export function useGameSocket({ fetchQuestion = false, fetchGame = false, socket
         return () => {
             socket?.off(ServerSocketEvnets.GAME_ROOM_UPDATE, handleGameUpdate);
             socket?.off(ServerSocketEvnets.SOCKET_ERROR, handleSocketError);
+            socket?.off(ServerSocketEvnets.GAME_ROOM_ERROR, handleGameError);
         }
-    },[])
-
-    //initial fetches
-    useEffect(() => {
-        if (fetchGame) {
-            socket.emit(SocketEvents.GAME_STATE, { gameId }, (response: { status: boolean, gameState: GameRoomType, message: string }) => {
-                setGame({
-                    ...response.gameState,
-                    players: new Map(response.gameState.players)
-                })
-            });
-        }
-        if (fetchQuestion) {
-            socket.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: { game: GameRoomType, status: boolean, error?: boolean, message: string, question: QuestionType[] }) => {
-                if (response.status && response.error) {
-                    setGameQuestion(response.question);
-                    setGame(game)
-                } else {
-                    console.log("from question update", response);
-                    if (response.message) setSocketError(response.message);
-                }
-                
-            })
-        }
-        
-    }, [fetchGame,fetchQuestion]);
+    },[socket])
+    
 
     function joinRoom(playerId: string, username: string) {
         let result;
-        socket.emit(SocketEvents.JOIN_ROOM, { gameId, playerId, username }, ({ status }:{status:boolean}) => {
+        socket?.emit(SocketEvents.JOIN_ROOM, { gameId, playerId, username }, ({ status }:{status:boolean}) => {
             result = status;
         });
         return result
     }
 
     function quitGame() {
-        socket.emit(SocketEvents.QUIT_GAME, { gameId, playerId: currentPlayer?.playerId }, (response: { status: boolean }) => {
+        socket?.emit(SocketEvents.QUIT_GAME, { gameId, playerId: currentPlayer?.playerId }, (response: { status: boolean }) => {
             if (!response.status) {
                 toast.error("Failed to Quit the game");
                 console.log("failed to quit", response)
@@ -113,11 +96,14 @@ export function useGameSocket({ fetchQuestion = false, fetchGame = false, socket
         game,
         socketError,
         currentPlayer,
+        gameState,
+        setGameState,
         currentQuestion,
-        gameQuestion,
-        setGame,
+        updateGameState,
         quitGame,
         setCurrentQuestion,
-        joinRoom
+        joinRoom,
+        localgameState,
+        setLocalGameState,
     }
 }

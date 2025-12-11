@@ -3,11 +3,10 @@ import DeleteModal from "../modal/DeleteModal";
 import {Socket} from 'socket.io-client'
 import { GameRoomPlayerType, GameRoomType, ServerSocketEvnets, SocketEvents } from "../../types";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 
 type Props = {
     socket: Socket | null,
-    game: GameRoomType | null,
+    game: GameRoomType | undefined | null,
 	currentPlayer: GameRoomPlayerType | null
 	handleEndTimer: ()=> void // for handling logic after the time finish
 }
@@ -46,15 +45,6 @@ const TimerSection = forwardRef<TimerSectionRef, Props>((props, ref) => {
 	}
 
 	useEffect(() => {
-		const handleSocketError = (res: { message: string, redirect: boolean }) => {
-			console.log(res.message)
-			if (res.message) {
-				toast.error(res.message)
-		  	}
-		  	if (res.redirect) {
-				navigate('/');
-		  	}
-		};
 
 		const handleGameTimerUpdate = ({ status,endTime }:{status:boolean,startTime:number,endTime:number})=>{
 			if (!status) return null
@@ -62,9 +52,8 @@ const TimerSection = forwardRef<TimerSectionRef, Props>((props, ref) => {
 		}
 
 		socket?.on(ServerSocketEvnets.GAME_ROOM_TIME_UPDATE,handleGameTimerUpdate)
-		socket?.on(ServerSocketEvnets.GAME_ROOM_ERROR, handleSocketError);
 		return () => {
-			socket?.off(ServerSocketEvnets.GAME_ROOM_ERROR, handleSocketError);
+			socket?.off(ServerSocketEvnets.GAME_ROOM_TIME_UPDATE,handleGameTimerUpdate)
 			clearInterval(timerIntervel);
 		};
 	}, [])

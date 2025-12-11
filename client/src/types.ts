@@ -32,6 +32,12 @@ export enum SocketEvents {
     SOCKET_ERROR = 'socket_error'
 }
 
+export enum GameStateType {
+    FINISHED = 'finished',
+    RUNNING = 'running',
+    LOBBY = 'lobby',
+}
+
 export enum QuestionStatus {
     CURRENT = "CURRENT",
     NOTANSWERED = "NOTANSWERED",
