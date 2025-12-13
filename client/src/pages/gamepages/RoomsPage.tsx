@@ -62,6 +62,12 @@ function RoomsPage() {
 
   if (!socket || !socket.connected) {
     return (
+      <> <p className="text-red-500">Socket not connected,please retry</p> </>
+    )
+  }
+
+  if (loading) {
+    return (
       <>
         <Loader />
       </>

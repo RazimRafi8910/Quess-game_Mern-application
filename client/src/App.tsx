@@ -14,6 +14,7 @@ import RoomsPage from "./pages/gamepages/RoomsPage";
 import GameLobby from "./pages/gamepages/GameLobby";
 import { useRef } from "react";
 import SocketProvider from "./components/SocketProvider";
+import GameResult from "./pages/gamepages/GameResult";
 
 function App() {
   const { loading } = useAuth();
@@ -55,6 +56,15 @@ function App() {
 
           {/* game routes */}
           <Route element={<AuthProtect><SocketProvider /></AuthProtect>}>
+            <Route path="/room" element={<RoomsPage />} />
+          <Route
+              path="/lobby/:id"
+              element={
+                <AuthProtect>
+                  <GameLobby />
+                </AuthProtect>
+              }
+            />
             <Route
               path="/game/:id"
               element={
@@ -63,16 +73,8 @@ function App() {
                 </AuthProtect>
               }
             />
-            <Route path="/room" element={<RoomsPage />} />
-            <Route
-              path="/lobby/:id"
-              element={
-                <AuthProtect>
-                  <GameLobby />
-                </AuthProtect>
-              }
-            />
           </Route>
+          <Route path="/result/:id" element={<GameResult/>} />
 
         </Routes>
       </div>

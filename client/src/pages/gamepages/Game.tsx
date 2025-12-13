@@ -28,6 +28,7 @@ function Game() {
 
   //get new question
   useEffect(() => {
+    console.log(questionAttented)
     socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: { game: GameRoomType, status: boolean, error?: boolean, message: string, question: QuestionType[] }) => {
       if (response.status && !response.error) {
         setGameQuestion(response.question);
@@ -81,8 +82,13 @@ function Game() {
   }
 
   const handleSubmit = () => {
-    console.log(timerRef?.current?.getTimer())
-    setSubmit(true)
+    const finalData = {
+      timeLeft: timerRef.current?.getTimer(),
+      QuestionAnswer: gameQuestion,
+      player: currentPlayer,
+      gameId,
+    }
+    
   }
 
   const handleModalClose = () => {
@@ -93,7 +99,7 @@ function Game() {
   const openSubmitModal = () => {
     setSubmit(true)
     const attentedNo = gameQuestion?.reduce<number>((attented, item) => {
-      if (item.playerState?.answeredOption !== null) attented++
+      if (item.playerState !== undefined && item.playerState.answeredOption !== null) attented++
       return attented
     }, 0) || 0;
     setQestionAttented(attentedNo);
@@ -114,6 +120,7 @@ function Game() {
           <div className="md:w-1/2 md:mx-0 w-full mx-10">
             <SubmitModal
               isOpen={submit}
+              gameId={gameId}
               questionAttented={questionAttented}
               questionLen={gameQuestion?.length || 0}
               handleModalClose={handleModalClose}
