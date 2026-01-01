@@ -1,39 +1,24 @@
 import { useEffect, useState } from "react"
 import { GameStateType } from "../../types"
-import { useNavigate } from "react-router-dom"
-
 
 type Props = {
     isOpen: boolean
-    gameId:string | undefined
     timeTaken: (()=> number) | undefined
     gameState: GameStateType
     questionLen: number
     questionAttented: number
     handleModalClose: (a: boolean) => void
-    handleSubmit:() => void
+    handleSubmit: () => void
+    finishGameState:() => void
 }
 
-function SubmitModal({ isOpen,gameId, handleModalClose, handleSubmit, timeTaken, gameState, questionLen, questionAttented }: Props) {    
+function SubmitModal({ isOpen, handleModalClose, handleSubmit, timeTaken, gameState, questionLen, questionAttented,finishGameState }: Props) {    
     const remaining = timeTaken != undefined ? timeTaken() : 0;
-    const navigate = useNavigate()
-    const [navigateTimer, setNavigateTimer] = useState(5000);
-    let timerIntervel: number;
 
     useEffect(() => {
         if (gameState == GameStateType.FINISHED) {
-            clearInterval(timerIntervel);
-            timerIntervel = setInterval(() => {
-                setNavigateTimer((prev) => {
-                    if (prev <= 0) {
-                        clearInterval(timerIntervel);
-                        handleSubmit()
-                    }
-                    return prev - 1000
-                })
-            }, 1000);
+            handleSubmit();
         }
-        return () => clearInterval(timerIntervel);
     },[gameState])
 
     if (!isOpen) {
@@ -62,11 +47,11 @@ function SubmitModal({ isOpen,gameId, handleModalClose, handleSubmit, timeTaken,
                             </div>
                             {
                                 gameState == GameStateType.RUNNING ? 
-                                    <button onClick={handleSubmit} data-modal-hide="popup-modal" type="button" className="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
+                                    <button onClick={finishGameState} data-modal-hide="popup-modal" type="button" className="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
                                     Submit
                                     </button>
                                     :
-                                    <p className="text-gray-500 mt-2">results in { navigateTimer }</p>
+                                    <p className="text-gray-500 mt-2">results in </p>
                             }
                             {
                                 gameState == GameStateType.RUNNING &&

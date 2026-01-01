@@ -4,7 +4,7 @@ import TimerSection, { TimerSectionRef } from "../../components/GameComponents/T
 import ChatBox from "../../components/ChatComponents/ChatBox";
 import { useOutletContext, useParams, } from 'react-router-dom';
 import { Socket } from 'socket.io-client';
-import { GameRoomPlayerType, GameRoomType, GameStateType, QuestionOptionType, QuestionStatus, QuestionType, SocketEvents } from "../../types";
+import { GameRoomPlayerType, GameRoomType, GameStateType, QuestionOptionType, QuestionStatus, QuestionType, ServerSocketEvnets, SocketEvents } from "../../types";
 import AnswerIndicator from "../../components/GameComponents/AnswerIndicator";
 import SubmitModal from "../../components/modal/SubmitModal";
 import { useGameSocket } from "../../Hooks/useGameSocket";
@@ -28,10 +28,11 @@ function Game() {
 
   //get new question
   useEffect(() => {
-    console.log(questionAttented)
-    socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: { game: GameRoomType, status: boolean, error?: boolean, message: string, question: QuestionType[] }) => {
+    console.log(gameQuestion)
+    socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: { game: GameRoomType, status: boolean, error?: boolean, message: string }) => {
       if (response.status && !response.error) {
-        setGameQuestion(response.question);
+        console.log(response)
+        setGameQuestion(response.game.questions);
         updateGameState(response.game);
       } else {
         console.log("from question update" + response)
@@ -74,21 +75,29 @@ function Game() {
       return updated;
     })
   }
+
+  const finishGameState = () => {
+    setGameState(GameStateType.FINISHED);
+  }
   
   const handleEndTimer = () => {
     console.log("time finished")
-    setGameState(GameStateType.FINISHED);
+    finishGameState() // change local gamestate to finish
     openSubmitModal()
   }
 
   const handleSubmit = () => {
-    const finalData = {
+    setGameState(GameStateType.FINISHED);
+    const submitData = {
       timeLeft: timerRef.current?.getTimer(),
-      QuestionAnswer: gameQuestion,
-      player: currentPlayer,
+      questionAnswer: gameQuestion,
+      playerId: currentPlayer?.playerId,
       gameId,
     }
-    
+    console.log(submitData);
+    socket?.emit(SocketEvents.GAME_PLAYER_SUBMIT, {gameId,submitData}, (response:any) => {
+      console.log(response);
+    });
   }
 
   const handleModalClose = () => {
@@ -120,13 +129,13 @@ function Game() {
           <div className="md:w-1/2 md:mx-0 w-full mx-10">
             <SubmitModal
               isOpen={submit}
-              gameId={gameId}
               questionAttented={questionAttented}
               questionLen={gameQuestion?.length || 0}
-              handleModalClose={handleModalClose}
-              gameState={gameState}
               timeTaken={timerRef.current?.getTimer}
-              handleSubmit={handleSubmit} />
+              gameState={gameState}
+              handleModalClose={handleModalClose}
+              handleSubmit={handleSubmit}
+              finishGameState={finishGameState} />
             <TimerSection
               ref={timerRef}
               socket={socket}

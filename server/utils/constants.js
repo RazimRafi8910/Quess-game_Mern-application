@@ -7,6 +7,7 @@ export const SocketEvents = {
     START_GAME: 'start_game',
     QUIT_GAME:'quit_game',
     GAME_RUN: 'game_run',
+    GAME_PLAYER_SUBMIT : 'player_submit',
     GAME_STATE:'game_state', // for getting the game state
     PLAYER_UPDATE:'player_update',
     SOCKET_ERROR: 'socket_error',
