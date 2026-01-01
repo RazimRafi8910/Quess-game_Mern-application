@@ -81,6 +81,7 @@ export type GameRoomPlayerType = {
     username: string
     role: 'host' | 'player'
     isReady: boolean
+    completed:boolean
     status:boolean // player online status
     socketId:string
 }

@@ -144,7 +144,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             //acknowledgment cb for frontend state update
             const response = {
                 ...questionStatus,
-                game: game.toJson(),
+                game: game.toJson({ questions: true }),
             }
             callback(response);
             //game Timer starts
@@ -163,13 +163,18 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             callback({ status: false, message: "you are not belong to this game" });
             return
         }
-
         const game = gameLobby.getGameState(gameId);
+        console.log(game)
         if (!game) {
             callback({ status: false, message: "invalid or missing game Id" });
         }
 
-        console.log(submitData)
+        const result = game.playerGameFinish(submitData);
+        
+        if (result.status) {
+            callback(result);
+        }
+        io.to(gameId).emit()
     })
 
     // unused code (maybe,testing)

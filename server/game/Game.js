@@ -14,7 +14,8 @@ export class Game {
                 username: this.host.username,
                 role: PlayerRoles.HOST,
                 isReady: false, // ready in game lobby
-                status:true, //present in game or not
+                status: true, //present in game or not
+                completed:false,// is player completed the game or not
                 socketId:hostSocketId,
             }]
         ]);
@@ -173,37 +174,29 @@ export class Game {
     }
 
     async getQuestion() {
-        if (this.questions == false) {
-            const result = await this.generateQuestions();
-            this.questions = result;
-            if (!this.questions || this.questions.length == 0) {
-                return {
-                    status: false,
-                    error: true,
-                    message:"failed to generate question",
-                }
-            }
+        if (this.questions !== undefined || this.questions.length != 0 || this.questions != false) {
             return {
                 status: true,
                 error: false,
-                messsage:"question created",
-                question: this.questions
+                message: "Question created",
             }
         }
-        if (this.questions !== undefined || this.questions.length != 0) {
-            return {
-                status: true,
-                error:false,
-                message:"qestion created",
-                question:this.questions
-            }
-        } else {
+
+        const result = await this.generateQuestions();
+
+        if (!result || result.length == 0) {
             return {
                 status: false,
-                error:false,
-                message: "qestion creating",
-                question:[]
+                error: true,
+                message:"Failed to generate question",
             }
+        }
+        this.question = result;
+
+        return {
+            status: true,
+            error: false,
+            message: "question created",
         }
     }
 
@@ -268,6 +261,44 @@ export class Game {
         }
     }
 
+    //finish player state
+    playerGameFinish({playerId,questionAnswer:playerAnswer}) {
+        let player = this.players.get(playerId);
+        if (!player) {
+            return {
+                status: false,
+                message: "player not found",
+                error: true
+            }
+        }
+        // calculate player score
+        let score = 0;
+        const questionMap = new Map(this.questions.map((item) => ([item._id.toString(), item])));
+        playerAnswer.map((answer) => {
+            if (answer.playerState !== undefined) {
+                const currentQuestion = questionMap.get(answer._id);
+                if (currentQuestion.answer == answer.playerState.answeredOption) {
+                    score += 3;
+                } else {
+                    score -= 1;
+                }
+            }
+        });
+
+        this.players.set(playerId, {
+            ...player,
+            completed: true,
+            score
+        });
+
+        return {
+            status: true,
+            errro: false,
+            message:"Player result updated",
+        }
+
+    }
+
     toJson({ password = false, teams = false, questions = false } = {}) {
         let response = {
             host: this.host,
@@ -298,9 +329,10 @@ export class Game {
         }
 
         if (questions) {
+            const clientQuestion = this.questions.map((question) => { return { ...question, answer: null } });
             response = {
                 ...response,
-                questions:this.questions
+                questions:clientQuestion
             }
         }
         return response

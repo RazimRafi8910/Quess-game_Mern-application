@@ -59,7 +59,7 @@ const TimerSection = forwardRef<TimerSectionRef, Props>((props, ref) => {
 	}, [])
 
 	//this is the function that is used to taking the timer state from here to game page using ref
-	useImperativeHandle(ref, () => ({ getTimer: () => timer }));
+	useImperativeHandle(ref, () => ({ getTimer: () => timer, setTimer: () => setTimer(0) }));
     
     // close dropdown when clicking outside
   	useEffect(() => {

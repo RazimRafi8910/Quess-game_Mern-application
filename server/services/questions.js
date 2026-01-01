@@ -2,7 +2,7 @@ import { Question } from '../models/QuestionModel.js';
 
 export async function getQuestionsByCategory(category) {
     try {
-        const question = await Question.find({ category, isListed: true }).lean();
+        const question = await Question.find({ category, isListed: true }).lean().select('+answer');
         return {
             question,
             error: false,
