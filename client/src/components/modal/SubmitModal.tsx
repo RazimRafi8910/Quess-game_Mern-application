@@ -16,7 +16,6 @@ type Props = {
 
 function SubmitModal({ isOpen,gameId, handleModalClose, handleSubmit, timeTaken, gameState, questionLen, questionAttented }: Props) {    
     const remaining = timeTaken != undefined ? timeTaken() : 0;
-    const navigate = useNavigate()
     const [navigateTimer, setNavigateTimer] = useState(5000);
     let timerIntervel: number;
 

@@ -28,6 +28,7 @@ export enum SocketEvents {
     START_GAME = 'start_game',
     QUIT_GAME = 'quit_game', // for host and player in game running state
     PLAYER_UPDATE = 'player_update',
+    GAME_PLAYER_SUBMIT = 'player_submit', // for submitting for finishing the from player
     GAME_STATE = 'game_state',
     SOCKET_ERROR = 'socket_error'
 }

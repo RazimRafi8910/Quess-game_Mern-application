@@ -40,7 +40,8 @@ app.use(morgan(':remote-addr [:date[web]] :remote-user :method :url :status :res
 // app.use(express.urlencoded({extended:true}))
 app.use(cors({
     origin: 'http://localhost:5173',
-    credentials:true,
+    credentials: true,
+    maxAge:86400,
     methods: ["GET", "POST","DELETE"],
 }))
 

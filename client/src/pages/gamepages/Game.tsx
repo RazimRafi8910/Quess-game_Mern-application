@@ -4,7 +4,7 @@ import TimerSection, { TimerSectionRef } from "../../components/GameComponents/T
 import ChatBox from "../../components/ChatComponents/ChatBox";
 import { useOutletContext, useParams, } from 'react-router-dom';
 import { Socket } from 'socket.io-client';
-import { GameRoomPlayerType, GameRoomType, GameStateType, QuestionOptionType, QuestionStatus, QuestionType, SocketEvents } from "../../types";
+import { GameRoomPlayerType, GameRoomType, GameStateType, QuestionOptionType, QuestionStatus, QuestionType, ServerSocketEvnets, SocketEvents } from "../../types";
 import AnswerIndicator from "../../components/GameComponents/AnswerIndicator";
 import SubmitModal from "../../components/modal/SubmitModal";
 import { useGameSocket } from "../../Hooks/useGameSocket";
@@ -82,13 +82,17 @@ function Game() {
   }
 
   const handleSubmit = () => {
-    const finalData = {
+    setGameState(GameStateType.FINISHED);
+    const submitData = {
       timeLeft: timerRef.current?.getTimer(),
       QuestionAnswer: gameQuestion,
       player: currentPlayer,
       gameId,
     }
-    
+    console.log(submitData);
+    socket?.emit(SocketEvents.GAME_PLAYER_SUBMIT, {gameId,submitData}, (response:any) => {
+      console.log(response);
+    });
   }
 
   const handleModalClose = () => {
