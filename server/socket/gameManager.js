@@ -153,6 +153,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
     })
 
     // unused code (maybe,testing)
+    // -----dummy-----
     // socket.on(SocketEvents.GAME_RUN, (data) => {
     //     const { gameId } = data;
     //     const game = gameLobby.getGameState(gameId);
