@@ -1,5 +1,7 @@
+import { useNavigate } from "react-router-dom";
 
 export default function GameResult() {
+  const navigate = useNavigate();
   const players = [
     { username: "DragonSlayer99", score: 2850, rank: 1, isCurrentPlayer: false },
     { username: "ShadowNinja", score: 2640, rank: 2, isCurrentPlayer: false },
@@ -15,13 +17,15 @@ export default function GameResult() {
 
   const handleExit = () => {
     alert('Exiting game results...');
+    navigate('/room');
+    
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
-          <h1 className="text-4xl font-bold text-white text-center mb-8">
+          <h1 className="text-3xl font-bold text-white text-center mb-8">
             Game Results
           </h1>
 

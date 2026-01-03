@@ -11,17 +11,18 @@ function ChatBox({ Players }: Props) {
         <>
             <div className="container mt-4">
                 <div className="border bg-neutral-800/[0.4] rounded-lg p-4 border-slate-300 min-w-52">
-                    <p className='text-xl text-white font-bold my-2'>Chat</p>
+                    <p className='text-xl text-white font-bold my-2'>{false ? "Chat" : "Players"}</p>
                     <hr />
-                    <div className="players md:flex grid grid-cols-2 md:gap-1">
+                    {/* grid grid-cols-2 */}
+                    <div className="players flex justify-center place-content-center md:gap-1">
                         {
                             Players &&
                             Array.from(Players.values()).map((item,index) => (
-                                <PlayerCard key={index} playerName={item.username } status={item.status} role={item.role} color={ item.status ? index + 1 : 4} />       
+                                <PlayerCard key={index} playerName={item.username } status={item.status} role={item.role} completed={item.completed} />       
                             ))
                         }                    
                     </div>
-                    <ChatBubble/>
+                    { false && <ChatBubble/>}
                 </div>
             </div>
         </>

@@ -73,8 +73,8 @@ function App() {
                 </AuthProtect>
               }
             />
+            <Route path="/result/:id" element={<GameResult/>} />
           </Route>
-          <Route path="/result/:id" element={<GameResult/>} />
 
         </Routes>
       </div>

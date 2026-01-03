@@ -2,7 +2,6 @@ import { getQuestionsByCategory } from '../services/questions.js';
 import { generateGameID } from '../utils/idGenerator.js';
 import { GameState, PlayerRoles } from '../utils/constants.js'
 
-
 export class Game {
     constructor(gameHost,category,gameName,password,playerLimit,hostSocketId) {
         this.host = gameHost;
@@ -25,6 +24,7 @@ export class Game {
         this.questions = [];
         this.gameId = generateGameID();
         this.state = GameState.LOBBY;
+        this.completedPlayerCount = 0;
         if (password == null || password == '') {
             this.secure = false
         } else {
@@ -268,28 +268,61 @@ export class Game {
             return {
                 status: false,
                 message: "player not found",
-                error: true
+                error: true,
+                timeFail:false
             }
         }
+
+        this.completedPlayerCount++ 
+        if (this.completedPlayerCount === this.players.size) {
+            console.log("game finshedd")
+            this.state = GameState.FINISHED;
+        }
+
+        const currentTime = Date.now();
+        // 2sec for system lag
+        if (currentTime > this.gameEndAt) {
+            console.log("[time fail, game submit] current time:%d  end time:%d", currentTime, this.gameEndAt);
+            return {
+                status: false,
+                error: false,
+                message: "Time fail, late submit",
+                timeFail:true
+            }
+
+        }
+
         // calculate player score
-        let score = 0;
+        let playerResult = {
+            score: 0,
+            correct: 0,
+            incorrect: 0,
+        }
+        
         const questionMap = new Map(this.questions.map((item) => ([item._id.toString(), item])));
         playerAnswer.map((answer) => {
             if (answer.playerState !== undefined) {
                 const currentQuestion = questionMap.get(answer._id);
                 if (currentQuestion.answer == answer.playerState.answeredOption) {
-                    score += 3;
+                    playerResult.score += 3;
+                    playerResult.correct++
+                    console.log(playerResult.score)
                 } else {
-                    score -= 1;
+                    playerResult.score -= 1;
+                    playerResult.incorrect++;
                 }
             }
         });
 
+        playerResult.notAttent = this.questions.length - (playerResult.correct + playerResult.incorrect);
+
         this.players.set(playerId, {
             ...player,
             completed: true,
-            score
+            gameResult: playerResult,
         });
+
+        //TODO:check all players result are calculated then close the game
 
         return {
             status: true,

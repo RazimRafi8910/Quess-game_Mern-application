@@ -164,7 +164,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             return
         }
         const game = gameLobby.getGameState(gameId);
-        console.log(game)
+        
         if (!game) {
             callback({ status: false, message: "invalid or missing game Id" });
         }
@@ -174,7 +174,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         if (result.status) {
             callback(result);
         }
-        io.to(gameId).emit()
+        io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() });
     })
 
     // unused code (maybe,testing)
@@ -196,7 +196,6 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         const game = gameLobby.getGameState(gameId);
         console.log("quit evetnt from ", socket.id, "playerId", playerId);
         if (!socket.rooms.has(gameId)) {
-            console.log("gameid")
             socket.emit(ServerSocketEvents.GAME_ROOM_ERROR, { message: "You are not belong to this room or closed", redirect: true });
             return
         }
@@ -213,6 +212,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         console.log(result.newGameState);
 
         callback({ status: result.status });
+        // TODO: create a player left event for making player left message to client
         io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState:result.newGameState });
 
     });

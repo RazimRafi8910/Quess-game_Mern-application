@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import OptionDIv from "../../components/GameComponents/OptionDIv";
 import TimerSection, { TimerSectionRef } from "../../components/GameComponents/TimerSection";
 import ChatBox from "../../components/ChatComponents/ChatBox";
-import { useOutletContext, useParams, } from 'react-router-dom';
+import { useNavigate, useOutletContext, useParams, } from 'react-router-dom';
 import { Socket } from 'socket.io-client';
-import { GameRoomPlayerType, GameRoomType, GameStateType, QuestionOptionType, QuestionStatus, QuestionType, ServerSocketEvnets, SocketEvents } from "../../types";
+import { GameRoomPlayerType, GameRoomType, GameStateType, QuestionOptionType, QuestionStatus, QuestionType, SocketEvents } from "../../types";
 import AnswerIndicator from "../../components/GameComponents/AnswerIndicator";
 import SubmitModal from "../../components/modal/SubmitModal";
 import { useGameSocket } from "../../Hooks/useGameSocket";
@@ -14,6 +14,7 @@ function Game() {
   const timerRef = useRef<TimerSectionRef|null>(null);
   const socket = useOutletContext<Socket | null>();
   const [submit, setSubmit] = useState(false);
+  const navigate = useNavigate();
   const { game, updateGameState, socketError, currentPlayer, gameState, setGameState } = useGameSocket({ socket: socket, gameId: gameId });
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [error, setError] = useState<string>('')
@@ -28,18 +29,18 @@ function Game() {
 
   //get new question
   useEffect(() => {
-    console.log(gameQuestion)
-    socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: { game: GameRoomType, status: boolean, error?: boolean, message: string }) => {
+    if (gameQuestion === null || gameQuestion.length == 0) {
+     socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: { game: GameRoomType, status: boolean, error?: boolean, message: string }) => {
       if (response.status && !response.error) {
-        console.log(response)
         setGameQuestion(response.game.questions);
         updateGameState(response.game);
       } else {
         console.log("from question update" + response)
         if (response.message) setError(response.message);
       }
-    });
-   }, [])
+    }); 
+    }
+   }, [game])
 
   //TODO:update the current question status
   const handleNextQuestion = () => {
@@ -82,7 +83,7 @@ function Game() {
   
   const handleEndTimer = () => {
     console.log("time finished")
-    finishGameState() // change local gamestate to finish
+    //finishGameState() // change local gamestate to finish
     openSubmitModal()
   }
 
@@ -96,7 +97,9 @@ function Game() {
     }
     console.log(submitData);
     socket?.emit(SocketEvents.GAME_PLAYER_SUBMIT, {gameId,submitData}, (response:any) => {
-      console.log(response);
+      if (response.status) {
+        navigate(`/result/${gameId}`);
+      }
     });
   }
 

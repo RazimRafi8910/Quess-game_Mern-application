@@ -26,6 +26,9 @@ export class Lobby {
         //create a new game
         const newGame = new Game(gameHost, category, gameName, password, noPlayers, hostSocketId);
         const player = this.players.get(userId); // add player to the lobby state
+        if (!player) {
+            return new Error(`[game create, lobby] Player not found ${userId}`);
+        }
         this.rooms.set(newGame.gameId, newGame);
         this.io.emit(ServerSocketEvents.LOBBY_ROOM_UPDATE, {data: this.getAllGameRooms()});
         //player joins the new socket room
@@ -36,7 +39,6 @@ export class Lobby {
     getAllGameRooms() {
         const currentRooms = [...this.rooms.values()]
         const result = currentRooms.filter((game) => (game.state == GameState.LOBBY));
-        console.log(result);
         return result;
     }
 
