@@ -1,4 +1,4 @@
-import { getQuestionsByCategory } from '../services/questions.js';
+import { getQuestionsByCategory } from '../services/questions.service.js';
 import { generateGameID } from '../utils/idGenerator.js';
 import { GameState, PlayerRoles } from '../utils/constants.js'
 
@@ -330,6 +330,10 @@ export class Game {
             message:"Player result updated",
         }
 
+    }
+
+    isFinished() {
+        return this.state === GameState.FINISHED
     }
 
     toJson({ password = false, teams = false, questions = false } = {}) {

@@ -1,3 +1,4 @@
+import { saveGameResultDB } from "../services/gameResult.service.js";
 import { ServerSocketEvents, SocketEvents, GameState } from "../utils/constants.js";
 import { sendSocketError, validateSocketRoom } from './socketHelper.js';
 
@@ -158,7 +159,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
     });
 
     // intivitual player submit
-    socket.on(SocketEvents.GAME_PLAYER_SUBMIT, ({gameId,submitData},callback) => {
+    socket.on(SocketEvents.GAME_PLAYER_SUBMIT, async ({gameId,submitData},callback) => {
         if (!validateSocketRoom(socket, gameId)) {
             callback({ status: false, message: "you are not belong to this game" });
             return
@@ -170,10 +171,20 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         }
 
         const result = game.playerGameFinish(submitData);
-        
         if (result.status) {
             callback(result);
         }
+
+        if (game.isFinished()) {
+            const response = gameLobby.finishGame(gameId);
+            if (!response.status) {
+                console.error(response.message);
+                return
+            }
+            const saveResult = await saveGameResultDB(game.toJson());
+            if (saveResult.status) io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_CLOSED, { message: "Game Finished" });
+        }
+
         io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() });
     })
 

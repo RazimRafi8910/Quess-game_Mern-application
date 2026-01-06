@@ -37,7 +37,7 @@ const userSchema = new Schema({
     }
 }, { timestamps: true });
 
-userSchema.pre('save',async function (next) {
+userSchema.pre('save', async function (next) {
     const data = await AppData.findOneAndUpdate({}, { $inc: { currentPlayerId: 1 }, }, { new: true });
     if (data) {
         this.playerId = data.currentPlayerId;

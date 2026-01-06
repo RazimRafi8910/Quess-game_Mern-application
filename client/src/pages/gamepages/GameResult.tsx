@@ -5,7 +5,7 @@ export default function GameResult() {
   const players = [
     { username: "DragonSlayer99", score: 2850, rank: 1, isCurrentPlayer: false },
     { username: "ShadowNinja", score: 2640, rank: 2, isCurrentPlayer: false },
-    { username: "Phoenix_Rising", score: 2530, rank: 3, isCurrentPlayer: true },
+    { username: "Aswanth", score: 0, rank: 3, isCurrentPlayer: true },
     { username: "ThunderStrike", score: 2420, rank: 4, isCurrentPlayer: false },
     { username: "MysticWarrior", score: 2310, rank: 5, isCurrentPlayer: false },
     { username: "CyberSamurai", score: 2180, rank: 6, isCurrentPlayer: false },

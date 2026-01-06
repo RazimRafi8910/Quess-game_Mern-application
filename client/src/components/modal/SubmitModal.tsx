@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { GameStateType } from "../../types"
 
 type Props = {

@@ -36,6 +36,22 @@ export class Lobby {
         return newGame;
     }
 
+    finishGame(gameId) {
+        const game = this.rooms.get(gameId);
+        if (!game) {
+            return {
+                status: false,
+                message:"game not found"
+            }
+        }
+
+        const status = this.rooms.delete(gameId)
+        return {
+            status,
+            message:"game removed"
+        }
+    }
+
     getAllGameRooms() {
         const currentRooms = [...this.rooms.values()]
         const result = currentRooms.filter((game) => (game.state == GameState.LOBBY));
