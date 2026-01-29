@@ -27,6 +27,11 @@ export const PlayerRoles = {
     PLAYER:'player'
 }
 
+export const QuestionType = {
+    AI:'ai',
+    NORMAL:'normal',
+}
+
 export const ServerSocketEvents = {
     CONNECTION:'connection',
     DISCONNECT: 'disconnect',

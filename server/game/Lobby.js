@@ -22,9 +22,9 @@ export class Lobby {
         return this.players;
     }
 
-    createGame(gameHost, category, gameName, password, noPlayers, userId, hostSocketId) {
+    createGame(gameHost, category, gameName, password, noPlayers, userId, hostSocketId, aiQuestion) {
         //create a new game
-        const newGame = new Game(gameHost, category, gameName, password, noPlayers, hostSocketId);
+        const newGame = new Game(gameHost, category, gameName, password, noPlayers, hostSocketId, aiQuestion);
         const player = this.players.get(userId); // add player to the lobby state
         if (!player) {
             return new Error(`[game create, lobby] Player not found ${userId}`);

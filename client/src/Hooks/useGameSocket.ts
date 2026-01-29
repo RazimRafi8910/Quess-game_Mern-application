@@ -11,7 +11,6 @@ interface Props {
     gameId: string | undefined
 }
 
-// TODO: complete the custom hook
 // TODO: REMOVE FETCH GAMESTATE AND GET QUESTION FROM THIS HOOK TO GAME PAGE (THOSE ARE NOT \WORING)
 
 export function useGameSocket({ socket, gameId }: Props) {

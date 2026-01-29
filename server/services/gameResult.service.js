@@ -3,9 +3,8 @@ import gameModel from '../models/gameModel.js'
 
 export async function saveGameResultDB(game) {
     if (!game) {
-        return false
-    }
-    console.log(game);
+		return false;
+	}
     try {
         const { gameId, gameName, host, category, playerLimit, state, gameEndAt, players } = game;
         const data = {
@@ -17,13 +16,12 @@ export async function saveGameResultDB(game) {
             players: new Map(players),
             gameState: state,
             gameEndAt,
-        }
+        };
         const response = await gameModel.create(data);
-        console.log(response)
+        console.log(response);
     } catch (error) {
         console.log(error);
     } finally {
         return true
     }
-    
 }

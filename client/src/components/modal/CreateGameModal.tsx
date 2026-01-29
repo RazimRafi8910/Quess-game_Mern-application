@@ -33,6 +33,7 @@ interface FormContextValue {
 export interface RoomTypes {
   roomName: string;
   noPlayers: number;
+  aiQuestion?: string | null;
   password?: string | null;
   category: string;
 }
@@ -41,6 +42,7 @@ const InputSchema = yup.object({
   roomName: yup.string().required("Room name is a required Field"),
   noPlayers: yup.number().required("Number of players is required"),
   category: yup.string().required("please select the Category of the Quiz"),
+  aiQuestion:yup.string().nullable(),
   password: yup.string().notRequired().test('password-validate', 'password must be 3 letter',
     function (value) {
       const { showPassword } = this.options.context as FormContextValue;
@@ -68,6 +70,7 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
       noPlayers: 2,
       password: null,
       category: '',
+      aiQuestion:null,
     },
     context:{showPassword},
     mode:'onBlur'
@@ -96,10 +99,12 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
   const onCreate: SubmitHandler<RoomTypes> = async (data) => {
     const requestData = {
       ...data,
-      havePassword:showPassword,
+      havePassword: showPassword,
+      aiQuestion:data.aiQuestion == "true",
       hostName: getLocalStorageItem<string>('username'),
       hostSocketId:socket?.id || null,
-    }
+    } 
+    console.log(requestData)
     
     //create game request to backend
     const result = await getFetch<GameStateResponce>({ url: '/game/create', method: "POST", body: requestData });
@@ -177,7 +182,7 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
 
                     <div className="mb-2 mt-2">                    
                       <label className="flex justify-between cursor-pointer">
-                        <input type="checkbox" value="" disabled onChange={()=>{ console.log("ai clicked") }} className="sr-only peer"/>
+                        <input type="checkbox" {...register('aiQuestion')}  onChange={(e)=>{ console.log(e.target.value) }} className="sr-only peer"/>
                         <label className="block my-1 text-sm font-medium text-gray-900 dark:text-gray-500">AI Questions <i className="fa-light fa-circle-info"></i> </label>
                         <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
                       </label>

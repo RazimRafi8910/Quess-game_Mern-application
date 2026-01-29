@@ -4,9 +4,9 @@ import { getGameLobby } from "../socket/socketManager.js";
 export const createGame = (req, res, next) => {
     try {
         const user = req.user;
-        const { roomName, noPlayers, password, havePassword, category, hostName,hostSocketId } = req.body;
-
-        if (!roomName || !hostName || !noPlayers || !category || !hostSocketId) {
+        const { roomName, noPlayers, password, havePassword, category, hostName,hostSocketId,aiQuestion } = req.body;
+        
+        if (!roomName || !hostName || !noPlayers || !category || !hostSocketId || !aiQuestion) {
             console.log(req.body);
             return res.status(409).json({ success: false, message: "invalid request" });
         }
@@ -22,7 +22,7 @@ export const createGame = (req, res, next) => {
             username: hostName,
             user_id:user.user_id
         }
-        const newGame = gameLobby.createGame(gameHost, category, roomName, password, noPlayers, user.user_id, hostSocketId);
+        const newGame = gameLobby.createGame(gameHost, category, roomName, password, noPlayers, user.user_id, hostSocketId, aiQuestion);
 
         if (!newGame) {
             return res.status(500).json({ success: false, message: "game not created" });

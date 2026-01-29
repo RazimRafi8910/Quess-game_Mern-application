@@ -21,8 +21,8 @@ function PlayerCard({ playerName, role, status, completed }: Prop) {
         } else if (!status) {
             setPlayerState(statusConfig.offline);
         }
+        console.log(completed)
     }, [status, completed]);
-    console.log(completed)
     return (
         <>
              <button className="w-full m-1 bg-slate-800 hover:bg-slate-700 transition-colors rounded-md px-3 py-2 flex items-center gap-2 shadow-md border border-slate-700 hover:border-slate-600">

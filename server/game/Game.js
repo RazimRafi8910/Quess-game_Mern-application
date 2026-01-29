@@ -1,9 +1,10 @@
 import { getQuestionsByCategory } from '../services/questions.service.js';
 import { generateGameID } from '../utils/idGenerator.js';
-import { GameState, PlayerRoles } from '../utils/constants.js'
+import { GameState, PlayerRoles, QuestionType } from '../utils/constants.js'
+import { generateAiQuestion } from '../services/geminAPI.service.js';
 
 export class Game {
-    constructor(gameHost,category,gameName,password,playerLimit,hostSocketId) {
+    constructor(gameHost,category,gameName,password,playerLimit,hostSocketId,aiQuestion) {
         this.host = gameHost;
         this.gameName = gameName;
         this.category = category;
@@ -18,6 +19,7 @@ export class Game {
                 socketId:hostSocketId,
             }]
         ]);
+        this.questionType = aiQuestion ? QuestionType.AI : QuestionType.NORMAL;
         this.gameStartedTime = null;
         this.gameTime = 300;
         this.gameEndAt = null;
@@ -166,7 +168,16 @@ export class Game {
 
     async generateQuestions() {
         const category = this.category;
-        const result = await getQuestionsByCategory(category);
+        let result;
+        console.log(this.questionType)
+        if (this.questionType == QuestionType.AI) {
+            result = await generateAiQuestion(this.category, 5);
+            if (!result.status || result.error) {
+                result = await getQuestionsByCategory(category);        
+            }
+            return result.question;
+        }
+        result = await getQuestionsByCategory(category);
         if (result.error) {
             return null
         }
@@ -175,6 +186,7 @@ export class Game {
 
     async getQuestion() {
         if (this.questions !== undefined || this.questions.length != 0 || this.questions != false) {
+            console.log("[getquestion() ]question already created")
             return {
                 status: true,
                 error: false,

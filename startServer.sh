@@ -1,10 +1,13 @@
 #!/bin/bash
 
-# Start server script
-
 echo "Starting frontend..."
+cd client || exit 1
+npm run dev &
 
-# Add your server startup commands below
-cd client;
+echo "Starting backend..."
+cd ../server || exit 1
+npm start &
 
-npm run dev
+echo "All services started 🚀"
+
+wait
