@@ -1,6 +1,6 @@
 import { getQuestionsByCategory } from '../services/questions.service.js';
 import { generateGameID } from '../utils/idGenerator.js';
-import { GameState, PlayerRoles, QuestionType } from '../utils/constants.js'
+import { GameState, PlayerRoles, QuestionState, QuestionType } from '../utils/constants.js'
 import { generateAiQuestion } from '../services/geminAPI.service.js';
 
 export class Game {
@@ -147,6 +147,7 @@ export class Game {
         }
 
         //question generation
+        this.questions = QuestionState.PENDING;
         this.generateQuestions().then((result) => {
             if (!result) {
                 this.questions = false
@@ -166,16 +167,19 @@ export class Game {
         }
     }
 
+    //needs refacoring for all question related functions
     async generateQuestions() {
         const category = this.category;
         let result;
-        console.log(this.questionType)
+        
         if (this.questionType == QuestionType.AI) {
             result = await generateAiQuestion(this.category, 5);
             if (!result.status || result.error) {
-                result = await getQuestionsByCategory(category);        
+                result = await getQuestionsByCategory(category);    
+                return result;
             }
-            return result.question;
+            console.log(result)
+            return result.questions
         }
         result = await getQuestionsByCategory(category);
         if (result.error) {
@@ -185,8 +189,16 @@ export class Game {
     }
 
     async getQuestion() {
-        if (this.questions !== undefined || this.questions.length != 0 || this.questions != false) {
-            console.log("[getquestion() ]question already created")
+        if (this.questions == QuestionState.PENDING) {
+            console.log("return for pending")
+            return {
+                status: false,
+                questionState: QuestionState.PENDING,
+                error: false,
+                messsage:"Question is generating"
+            }
+        }
+        if (this.questions !== undefined || this.questions.length != 0) {
             return {
                 status: true,
                 error: false,
@@ -213,11 +225,21 @@ export class Game {
     }
 
     startGameTimer() {
+        if (this.gameEndAt !== null) {
+            return {
+                status: true,
+                emit:false,
+                startTime: this.gameStartedTime,
+                endTime:this.gameEndAt,
+                message:"timer started"
+            }
+        }
         const currentTime = Date.now();
         this.gameStartedTime = currentTime;
         this.gameEndAt = currentTime + this.gameTime * 1000;
         return {
             status: true,
+            emit:true,
             startTime: this.gameStartedTime,
             endTime:this.gameEndAt,
             message:"timer started"
@@ -254,16 +276,18 @@ export class Game {
             const newHost = Array.from(this.players.entries()).find((item) => {
                 return item[1].role == PlayerRoles.PLAYER ;
             })
-            this.host = {
+            if (newHost) {
+                this.host = {
                 username: newHost[1].username,
                 user_id:newHost[0]
-            }
-            //console.log(this.host)
+                }
+                //console.log(this.host)
 
-            this.players.set(newHost[0], {
-                ...newHost[1],
-                role:PlayerRoles.HOST
-            })
+                this.players.set(newHost[0], {
+                    ...newHost[1],
+                    role: PlayerRoles.HOST
+                });
+            }
         }
 
         return {
@@ -311,7 +335,11 @@ export class Game {
             incorrect: 0,
         }
         
-        const questionMap = new Map(this.questions.map((item) => ([item._id.toString(), item])));
+        let questionMap
+        if (this.questionType == QuestionType.AI) {
+            // TODO: make _id for ai questions
+        }
+        questionMap = new Map(this.questions.map((item) => ([item._id.toString(), item])));
         playerAnswer.map((answer) => {
             if (answer.playerState !== undefined) {
                 const currentQuestion = questionMap.get(answer._id);
@@ -358,7 +386,8 @@ export class Game {
             gameId: this.gameId,
             state: this.state,
             gameEndAt: this.gameEndAt,
-            gameTime:this.gameTime,
+            gameTime: this.gameTime,
+            gameQuestionType:this.questionType,
         }
         if (password) {
             response = {
@@ -378,10 +407,17 @@ export class Game {
         }
 
         if (questions) {
-            const clientQuestion = this.questions.map((question) => { return { ...question, answer: null } });
-            response = {
-                ...response,
-                questions:clientQuestion
+            if (this.questions == QuestionState.PENDING) {
+                response = {
+                    ...response,
+                    questions:'Pending'
+                }    
+            } else {
+                const clientQuestion = this.questions.map((question) => { return { ...question, answer: null } });
+                response = {
+                    ...response,
+                    questions:clientQuestion
+                }
             }
         }
         return response

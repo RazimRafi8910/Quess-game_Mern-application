@@ -8,6 +8,7 @@ import { GameRoomPlayerType, GameRoomType, GameStateType, QuestionOptionType, Qu
 import AnswerIndicator from "../../components/GameComponents/AnswerIndicator";
 import SubmitModal from "../../components/modal/SubmitModal";
 import { useGameSocket } from "../../Hooks/useGameSocket";
+import Loader from "../../components/Loader";
 
 function Game() {
   const { id: gameId } = useParams();
@@ -20,6 +21,8 @@ function Game() {
   const [error, setError] = useState<string>('')
   const [gameQuestion, setGameQuestion] = useState<QuestionType[] | null>(null);
   const [questionAttented, setQestionAttented] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [questionState, setQuestionState] = useState<'Idle' | 'Pending' | 'Ready'>('Idle');
 
   useEffect(() => {
     if (gameState == GameStateType.FINISHED) {
@@ -29,18 +32,38 @@ function Game() {
 
   //get new question
   useEffect(() => {
-    if (gameQuestion === null || gameQuestion.length == 0) {
-     socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: { game: GameRoomType, status: boolean, error?: boolean, message: string }) => {
-      if (response.status && !response.error) {
-        setGameQuestion(response.game.questions);
-        updateGameState(response.game);
-      } else {
-        console.log("from question update" + response)
-        if (response.message) setError(response.message);
+    // TODO: needs refactoring
+    /*
+      TODO(for furture) : instead of sending events muiltiple time make server an event when question is ready 
+        logic :
+        send get question event -> server send question if question is ready or send pending -> here set question if question came or pending then
+        set question loading true and wait for the server question event 
+    **/
+    if (questionState == 'Ready') return;
+    
+    const timer = setInterval(() => {
+      if (gameQuestion === null || gameQuestion.length == 0) {
+        socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: { game: GameRoomType, questionState?: 'Pending' | 'Ready', status: boolean, error?: boolean, message: string }) => {
+          if (response.status && !response.error) {
+            setGameQuestion(response.game.questions);
+            updateGameState(response.game);
+            setQuestionState('Ready')
+            clearInterval(timer)
+          } else if (response.questionState == 'Pending') {
+            console.log("pending");
+            setQuestionState('Pending');
+          }
+          else {
+            console.log("from question update");
+            console.log(response);
+            clearInterval(timer)
+            if (response.message) setError(response.message);
+          }
+        });
       }
-    }); 
-    }
-   }, [game])
+      }, 500)
+    return () => clearInterval(timer);
+  }, [gameQuestion, questionState]);
 
   //TODO:update the current question status
   const handleNextQuestion = () => {
@@ -174,7 +197,7 @@ function Game() {
               </>
 
                 :
-                <p className="text-red-500 text-base">Failed to load question<a className="ms-2 text-amber-600 underline" href="/">/home</a></p>
+                questionState == 'Pending' ? <Loader /> : <p className="text-red-500 text-base">Failed to load question<a className="ms-2 text-amber-600 underline" href="/">/home</a></p>
               
             }
 

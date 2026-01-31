@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import z, { ZodError } from 'zod';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINAI_API_KEY});
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINAI_API_KEY });
 
 const options = z.object({
     optionChar: z.enum(['A', 'B', 'C', 'D']).describe("corresponding charector of option, type:enum('A','B','C','D')"),
@@ -17,8 +17,8 @@ const questionSchema = z.object({
 const responseSchema = z.object({
     noQuestion: z.number().describe("number of generated question"),
     category: z.string().describe("category of the question"),
-    question:z.array(questionSchema).describe("generated question array"),
-})
+    questions: z.array(questionSchema).describe("generated question array"),
+});
 
 const responseJson = {
     type: "object",
@@ -82,12 +82,13 @@ Question should have four options (A,B,C,D) and one answer, generate response ba
             }
             
         });
-        
-        const questions = responseSchema.parse(JSON.parse(response.text))
+
+        const questions = responseSchema.parse(JSON.parse(response.text));
+        console.log(JSON.parse(response.text));
         return {
             status: true,
-            question: questions,
-            error:false
+            error: false,
+            questions:questions.questions,
         }
     } catch (error) {
         if (error instanceof ZodError) {
@@ -101,10 +102,11 @@ Question should have four options (A,B,C,D) and one answer, generate response ba
         });
         } else {
             console.log("something went wrong")
-            console.log(error)
+            console.log(error.message)
         }
         return {
             status: false,
+            message:error.message,
             error:true,
         }
     }

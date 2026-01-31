@@ -1,5 +1,5 @@
 import { saveGameResultDB } from "../services/gameResult.service.js";
-import { ServerSocketEvents, SocketEvents, GameState } from "../utils/constants.js";
+import { ServerSocketEvents, SocketEvents, GameState, QuestionState } from "../utils/constants.js";
 import { sendSocketError, validateSocketRoom } from './socketHelper.js';
 
 function handleSocketError(error) {
@@ -140,17 +140,32 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             //return io.to(gameId).emit(ServerSocketEvents.SOCKET_ERROR, { message: "invalid game Id", redirect: true });
         }
 
+        //TODO: needs rectoring
         try {
             const questionStatus = await game.getQuestion();
+            console.log(`get question event called by ${socket.player.username} `, socket.id)
+            if (!questionStatus.status) {
+                if (questionStatus.error) {
+                    callback({ status: false, error: true, message: questionStatus.message });
+                    return;
+                }
+                if (questionStatus.questionState == QuestionState.PENDING) {
+                    console.log("pending cb send")
+                    callback({ status: false, error: false, questionState: "Pending", message: "question is fetching" });
+                    return;
+                }
+            }
             //acknowledgment cb for frontend state update
             const response = {
                 ...questionStatus,
+                questionState:"Ready",
                 game: game.toJson({ questions: true }),
             }
-            callback(response);
+            console.log("question cb send");
+            callback(response); 
             //game Timer starts
             const result = game.startGameTimer();
-            if (result) {
+            if (result.status && result.emit) {
                 io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_TIME_UPDATE, result);
             }
         } catch (error) {

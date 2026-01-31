@@ -27,6 +27,11 @@ export const PlayerRoles = {
     PLAYER:'player'
 }
 
+export const QuestionState = {
+    PENDING: 'pending',
+    READY:'ready'
+}
+
 export const QuestionType = {
     AI:'ai',
     NORMAL:'normal',
