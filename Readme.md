@@ -23,7 +23,8 @@ this have game muiltiplayer mode where player can make room and friends can join
 
  ```
 
-## Frondent
+## Frontend
+runs on vite default port: 5173
 
 ```
 $ cd client
