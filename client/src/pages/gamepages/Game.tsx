@@ -21,7 +21,6 @@ function Game() {
   const [error, setError] = useState<string>('')
   const [gameQuestion, setGameQuestion] = useState<QuestionType[] | null>(null);
   const [questionAttented, setQestionAttented] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [questionState, setQuestionState] = useState<'Idle' | 'Pending' | 'Ready'>('Idle');
 
   useEffect(() => {
@@ -180,26 +179,35 @@ function Game() {
                 return <AnswerIndicator key={item._id} questionNo={index + 1} state={currentQuestion == index ? "CURRENT" : status} />
               })}
             </div>
-            
             {
+              (questionState == 'Pending' || questionState == 'Idle') && !error ? 
+                <Loader /> :
+                gameQuestion !== null ? gameQuestion.length !== 0 && 
+                  <>
+                    <div className="bg-gray-900/[0.5] py-4 border border-gray-700 rounded-lg text-center">
+                      <h1 className="font-medium md:text-xl text-slate-300">{ gameQuestion[currentQuestion].question }</h1> 
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-2 mt-3 md:mx-0">
+                      {
+                        gameQuestion[currentQuestion].options.map((item, index) => (
+                          <OptionDIv key={index} option={item.option} questionStatus={gameQuestion[currentQuestion].playerState} optionValue={item.optionValue} handleSelect={handeleSelect} />
+                        ))
+                      }
+                  </div>
+                  </> :
+                  <p className="text-red-500 text-base">Failed to load question<a className="ms-2 text-amber-600 underline" href="/">/home</a></p>
+            }
+            
+            {/* {
               gameQuestion !== null ? gameQuestion.length != 0 &&
               <>
-                <div className="bg-gray-900/[0.5] py-4 border border-gray-700 rounded-lg text-center">
-                  <h1 className="font-medium md:text-xl text-slate-300">{ gameQuestion[currentQuestion].question }</h1> 
-                </div>
-                <div className="grid md:grid-cols-2 gap-2 mt-3 md:mx-0">
-                  {
-                    gameQuestion[currentQuestion].options.map((item, index) => (
-                      <OptionDIv key={index} option={item.option} questionStatus={gameQuestion[currentQuestion].playerState} optionValue={item.optionValue} handleSelect={handeleSelect} />
-                    ))
-                  }
-                </div>
+                
               </>
 
                 :
-                questionState == 'Pending' ? <Loader /> : <p className="text-red-500 text-base">Failed to load question<a className="ms-2 text-amber-600 underline" href="/">/home</a></p>
+                questionState == 'Pending' ? <Loader /> : 
               
-            }
+            } */}
 
             
             <div className="mt-2">

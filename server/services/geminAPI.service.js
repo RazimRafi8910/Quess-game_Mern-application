@@ -9,6 +9,7 @@ const options = z.object({
 })
 
 const questionSchema = z.object({
+    _id:z.string().describe("id for the question"),
     question: z.string().describe("quiz question, type:string"),
     options: z.array(options).describe("list of options of the question, type:array(option) "),
     answer:z.enum(['A', 'B', 'C', 'D']).describe("correct option charector of the answer, type:enum('A','B','C','D')")
@@ -36,6 +37,7 @@ const responseJson = {
             items: {
                 type: "object",
                 properties: {
+                    _id: { type:'string', description:'unique random string for the questions' },
                     question: {
                         type: "string", description: "quiz question"
                     },
@@ -84,7 +86,6 @@ Question should have four options (A,B,C,D) and one answer, generate response ba
         });
 
         const questions = responseSchema.parse(JSON.parse(response.text));
-        console.log(JSON.parse(response.text));
         return {
             status: true,
             error: false,

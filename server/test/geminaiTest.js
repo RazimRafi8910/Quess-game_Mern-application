@@ -1,5 +1,6 @@
 import './loadEnv.js';
 import { generateAiQuestion } from "../services/geminAPI.service.js"; 
+import { serializeQuestions } from '../utils/serializeQuestions.js';
 const NO_QUESTIONS = 5;
 const CATEGORYS = ['IT', 'Programming', 'General'];
 
@@ -13,6 +14,7 @@ async function MainTest() {
                 throw new Error(result.message)
             }
             console.log(`test ${i} success`);
+            break
         } catch (error) {
             console.log(`test ${i} failed`);
         } finally {

@@ -2,6 +2,7 @@ import { getQuestionsByCategory } from '../services/questions.service.js';
 import { generateGameID } from '../utils/idGenerator.js';
 import { GameState, PlayerRoles, QuestionState, QuestionType } from '../utils/constants.js'
 import { generateAiQuestion } from '../services/geminAPI.service.js';
+import { serializeQuestions } from '../utils/serializeQuestions.js';
 
 export class Game {
     constructor(gameHost,category,gameName,password,playerLimit,hostSocketId,aiQuestion) {
@@ -179,7 +180,8 @@ export class Game {
                 return result;
             }
             console.log(result)
-            return result.questions
+            const aiQuestions = serializeQuestions(result.questions)
+            return aiQuestions;
         }
         result = await getQuestionsByCategory(category);
         if (result.error) {
@@ -336,9 +338,6 @@ export class Game {
         }
         
         let questionMap
-        if (this.questionType == QuestionType.AI) {
-            // TODO: make _id for ai questions
-        }
         questionMap = new Map(this.questions.map((item) => ([item._id.toString(), item])));
         playerAnswer.map((answer) => {
             if (answer.playerState !== undefined) {
