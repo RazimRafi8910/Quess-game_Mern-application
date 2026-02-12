@@ -9,6 +9,7 @@ import AnswerIndicator from "../../components/GameComponents/AnswerIndicator";
 import SubmitModal from "../../components/modal/SubmitModal";
 import { useGameSocket } from "../../Hooks/useGameSocket";
 import Loader from "../../components/Loader";
+import { toast } from "react-toastify";
 
 function Game() {
   const { id: gameId } = useParams();
@@ -105,7 +106,7 @@ function Game() {
   
   const handleEndTimer = () => {
     console.log("time finished")
-    //finishGameState() // change local gamestate to finish
+    finishGameState() // change local gamestate to finish
     openSubmitModal()
   }
 
@@ -118,7 +119,11 @@ function Game() {
       gameId,
     }
     console.log(submitData);
-    socket?.emit(SocketEvents.GAME_PLAYER_SUBMIT, {gameId,submitData}, (response:any) => {
+    socket?.emit(SocketEvents.GAME_PLAYER_SUBMIT, { gameId, submitData }, (response: any) => {
+      if (response.timeFail) {
+        toast.error('your submit is not taken, Not finished on give time');
+        navigate('/');
+      }
       if (response.status) {
         navigate(`/result/${gameId}`);
       }

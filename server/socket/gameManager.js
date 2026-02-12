@@ -174,7 +174,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
     });
 
     // intivitual player submit
-    socket.on(SocketEvents.GAME_PLAYER_SUBMIT, async ({gameId,submitData},callback) => {
+    socket.on(SocketEvents.GAME_PLAYER_SUBMIT, async ({ gameId, submitData }, callback) => {
         if (!validateSocketRoom(socket, gameId)) {
             callback({ status: false, message: "you are not belong to this game" });
             return
@@ -190,6 +190,8 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             callback(result);
         }
 
+        io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() });
+
         if (game.isFinished()) {
             const response = gameLobby.finishGame(gameId);
             if (!response.status) {
@@ -199,23 +201,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             const saveResult = await saveGameResultDB(game.toJson());
             if (saveResult.status) io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_CLOSED, { message: "Game Finished" });
         }
-
-        io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() });
-    })
-
-    // unused code (maybe,testing)
-    // -----dummy-----
-    // socket.on(SocketEvents.GAME_RUN, (data) => {
-    //     const { gameId } = data;
-    //     const game = gameLobby.getGameState(gameId);
-    //     if (!game) {
-    //         console.log(`[game not found] gameId:${gameId} not found`);
-    //         return
-    //     }
-
-    //     io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_RUNNING, { gameState: game.toJson({ teams: true }) });
-
-    // })
+    });
 
     //quit game (host&player)
     socket.on(SocketEvents.QUIT_GAME, ({ gameId, playerId }, callback) => {

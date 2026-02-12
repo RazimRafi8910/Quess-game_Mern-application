@@ -6,7 +6,7 @@ export const createGame = (req, res, next) => {
         const user = req.user;
         const { roomName, noPlayers, password, havePassword, category, hostName,hostSocketId,aiQuestion } = req.body;
         
-        if (!roomName || !hostName || !noPlayers || !category || !hostSocketId || !aiQuestion) {
+        if (!roomName || !hostName || !noPlayers || !category || !hostSocketId ) {
             console.log(req.body);
             return res.status(409).json({ success: false, message: "invalid request" });
         }

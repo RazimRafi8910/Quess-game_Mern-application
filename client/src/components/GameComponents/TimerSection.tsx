@@ -21,7 +21,7 @@ export interface TimerSectionRef {
 }
 
 const TimerSection = forwardRef<TimerSectionRef, Props>((props, ref) => {
-	const {socket,game,currentPlayer,handleEndTimer} = props
+	const { socket, game, currentPlayer, handleEndTimer } = props;
     const [timer, setTimer] = useState(0);
 	const [modal, setModal] = useState(false);
 	const [opensetting, setOpenSettings] = useState(false);

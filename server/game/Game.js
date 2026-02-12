@@ -322,7 +322,7 @@ export class Game {
         if (currentTime > this.gameEndAt) {
             console.log("[time fail, game submit] current time:%d  end time:%d", currentTime, this.gameEndAt);
             return {
-                status: false,
+                status: true,
                 error: false,
                 message: "Time fail, late submit",
                 timeFail:true

@@ -83,7 +83,13 @@ export type GameRoomPlayerType = {
     isReady: boolean
     completed:boolean
     status:boolean // player online status
-    socketId:string
+    socketId: string
+    gameResult?: {
+        score: number,
+        correct: number,
+        inCorrect:number
+      }
+    rank?:number
 }
 
 type GameTeamType = {
