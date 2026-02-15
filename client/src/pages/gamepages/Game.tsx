@@ -13,7 +13,7 @@ import { toast } from "react-toastify";
 
 function Game() {
   const { id: gameId } = useParams();
-  const timerRef = useRef<TimerSectionRef|null>(null);
+  const timerRef = useRef<TimerSectionRef | null>(null);
   const socket = useOutletContext<Socket | null>();
   const [submit, setSubmit] = useState(false);
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ function Game() {
     if (gameState == GameStateType.FINISHED) {
       setSubmit(true);
     }
-  },[])
+  }, [])
 
   //get new question
   useEffect(() => {
@@ -40,12 +40,13 @@ function Game() {
         set question loading true and wait for the server question event 
     **/
     if (questionState == 'Ready') return;
-    
+
     const timer = setInterval(() => {
       if (gameQuestion === null || gameQuestion.length == 0) {
         socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: { game: GameRoomType, questionState?: 'Pending' | 'Ready', status: boolean, error?: boolean, message: string }) => {
           if (response.status && !response.error) {
             setGameQuestion(response.game.questions);
+            console.log(response.game.questions)
             updateGameState(response.game);
             setQuestionState('Ready')
             clearInterval(timer)
@@ -61,7 +62,7 @@ function Game() {
           }
         });
       }
-      }, 500)
+    }, 500)
     return () => clearInterval(timer);
   }, [gameQuestion, questionState]);
 
@@ -84,7 +85,7 @@ function Game() {
     });
   }
 
-  const updatePlayerQuestionState = (answeredOption:QuestionOptionType["option"] | null, status:QuestionStatus) => {
+  const updatePlayerQuestionState = (answeredOption: QuestionOptionType["option"] | null, status: QuestionStatus) => {
     setGameQuestion((prev) => {
       if (!prev || !prev[currentQuestion]) return prev;
 
@@ -93,7 +94,7 @@ function Game() {
         ...updated[currentQuestion],
         playerState: {
           answeredOption,
-          questionStatus:status
+          questionStatus: status
         }
       }
       return updated;
@@ -103,7 +104,7 @@ function Game() {
   const finishGameState = () => {
     setGameState(GameStateType.FINISHED);
   }
-  
+
   const handleEndTimer = () => {
     console.log("time finished")
     finishGameState() // change local gamestate to finish
@@ -124,6 +125,7 @@ function Game() {
         toast.error('your submit is not taken, Not finished on give time');
         navigate('/');
       }
+      console.log(response)
       if (response.status) {
         navigate(`/result/${gameId}`);
       }
@@ -132,7 +134,7 @@ function Game() {
 
   const handleModalClose = () => {
     setQestionAttented(0);
-      setSubmit(false)
+    setSubmit(false)
   }
 
   const openSubmitModal = () => {
@@ -172,10 +174,10 @@ function Game() {
               game={game}
               handleEndTimer={handleEndTimer}
               currentPlayer={currentPlayer as GameRoomPlayerType} />
-            
+
             <div>
-              <p className="text-md text-red-500 text-center">{ socketError }</p>
-              <p className="text-md text-red-500 text-center">{ error }</p>
+              <p className="text-md text-red-500 text-center">{socketError}</p>
+              <p className="text-md text-red-500 text-center">{error}</p>
             </div>
 
             <div className="flex justify-center my-2">
@@ -185,12 +187,12 @@ function Game() {
               })}
             </div>
             {
-              (questionState == 'Pending' || questionState == 'Idle') && !error ? 
+              (questionState == 'Pending' || questionState == 'Idle') && !error ?
                 <Loader /> :
-                gameQuestion !== null ? gameQuestion.length !== 0 && 
+                gameQuestion !== null ? gameQuestion.length !== 0 &&
                   <>
                     <div className="bg-gray-900/[0.5] py-4 border border-gray-700 rounded-lg text-center">
-                      <h1 className="font-medium md:text-xl text-slate-300">{ gameQuestion[currentQuestion].question }</h1> 
+                      <h1 className="font-medium md:text-xl text-slate-300">{gameQuestion[currentQuestion].question}</h1>
                     </div>
                     <div className="grid md:grid-cols-2 gap-2 mt-3 md:mx-0">
                       {
@@ -198,11 +200,11 @@ function Game() {
                           <OptionDIv key={index} option={item.option} questionStatus={gameQuestion[currentQuestion].playerState} optionValue={item.optionValue} handleSelect={handeleSelect} />
                         ))
                       }
-                  </div>
+                    </div>
                   </> :
                   <p className="text-red-500 text-base">Failed to load question<a className="ms-2 text-amber-600 underline" href="/">/home</a></p>
             }
-            
+
             {/* {
               gameQuestion !== null ? gameQuestion.length != 0 &&
               <>
@@ -214,24 +216,24 @@ function Game() {
               
             } */}
 
-            
+
             <div className="mt-2">
               <div className="flex justify-center gap-2">
-                <button className="text-white bg-blue-900 px-5 py-2 rounded-lg hover:bg-red-200 hover:text-black" onClick={handleBackQuestion}>back</button>                
+                <button className="text-white bg-blue-900 px-5 py-2 rounded-lg hover:bg-red-200 hover:text-black" onClick={handleBackQuestion}>back</button>
                 <button className="text-white bg-neutral-600 px-5 rounded-lg hover:bg-slate-300 hover:text-neutral-900" onClick={handleClearSelect}>clear</button>
                 {
                   gameQuestion &&
-                  gameQuestion.length-1 === currentQuestion ? 
+                    gameQuestion.length - 1 === currentQuestion ?
                     <button className="text-white bg-orange-900 px-5 py-2 rounded-lg hover:bg-green-300 hover:text-neutral-800" onClick={openSubmitModal}>Submit</button>
                     :
                     <button className="text-white bg-blue-900 px-5 py-2 rounded-lg hover:bg-green-300 hover:text-neutral-800" onClick={handleNextQuestion}>Next</button>
                 }
-                
+
               </div>
             </div>
 
             <div className="chat">
-              <ChatBox Players={game?.players}/>
+              <ChatBox Players={game?.players} />
             </div>
 
           </div>

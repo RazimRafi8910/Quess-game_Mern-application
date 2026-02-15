@@ -5,7 +5,7 @@ import { generateAiQuestion } from '../services/geminAPI.service.js';
 import { serializeQuestions } from '../utils/serializeQuestions.js';
 
 export class Game {
-    constructor(gameHost,category,gameName,password,playerLimit,hostSocketId,aiQuestion) {
+    constructor(gameHost, category, gameName, password, playerLimit, hostSocketId, aiQuestion) {
         this.host = gameHost;
         this.gameName = gameName;
         this.category = category;
@@ -16,8 +16,8 @@ export class Game {
                 role: PlayerRoles.HOST,
                 isReady: false, // ready in game lobby
                 status: true, //present in game or not
-                completed:false,// is player completed the game or not
-                socketId:hostSocketId,
+                completed: false,// is player completed the game or not
+                socketId: hostSocketId,
             }]
         ]);
         this.questionType = aiQuestion ? QuestionType.AI : QuestionType.NORMAL;
@@ -41,12 +41,12 @@ export class Game {
             return false
         }
         if (this.players.has(playerId)) {
-           return true
+            return true
         }
         const newPlayer = {
             username: username,
             isReady: false,
-            status:true,
+            status: true,
             role,
             socketId,
         }
@@ -64,11 +64,11 @@ export class Game {
     makeTeam() {
         this.team1 = {
             teamId: generateGameID(),
-            teamPlayers:[],
+            teamPlayers: [],
         }
         this.team2 = {
             teamId: generateGameID(),
-            teamPlayers:[],
+            teamPlayers: [],
         }
 
         const players = [...this.players];
@@ -79,7 +79,7 @@ export class Game {
             return {
                 status: true,
                 teamOne: this.team1,
-                teamTwo:this.team2,
+                teamTwo: this.team2,
             };
         }
 
@@ -94,15 +94,15 @@ export class Game {
                 currentTeam = 1;
             }
         }
-        
+
         return {
             status: true,
             teamOne: this.team1,
-            teamTwo:this.team2,
+            teamTwo: this.team2,
         }
     }
 
-    updatePlayerIsready(playerId,status) {
+    updatePlayerIsready(playerId, status) {
         const player = this.players.get(playerId)
         if (!player) {
             return false;
@@ -116,14 +116,14 @@ export class Game {
         if (hostId != this.host.user_id) {
             return {
                 message: "Player is not host",
-                status:false
+                status: false
             };
         }
 
         if (this.players.size < 2) {
             return {
                 message: "minimun 2 players is requied to start the game",
-                status:false
+                status: false
             }
         }
 
@@ -131,7 +131,7 @@ export class Game {
         if (notReadyPlayers) {
             return {
                 message: "Players are not ready",
-                status:false
+                status: false
             }
         }
 
@@ -143,7 +143,7 @@ export class Game {
         if (!teamGenerationStat.status) {
             return {
                 message: "Team not generated",
-                status:false,
+                status: false,
             }
         }
 
@@ -157,14 +157,14 @@ export class Game {
         }).catch((e) => {
             this.questions = false
         })
-        
+
         this.state = GameState.STARTED;
-        
+
         return {
             message: "game started",
             status: true,
-            game: this.toJson({ password: false, teams: true, questions:true }),
-            gameStarted:false //does game move from lobbby or not
+            game: this.toJson({ password: false, teams: true, questions: true }),
+            gameStarted: false //does game move from lobbby or not
         }
     }
 
@@ -172,11 +172,11 @@ export class Game {
     async generateQuestions() {
         const category = this.category;
         let result;
-        
+
         if (this.questionType == QuestionType.AI) {
             result = await generateAiQuestion(this.category, 5);
             if (!result.status || result.error) {
-                result = await getQuestionsByCategory(category);    
+                result = await getQuestionsByCategory(category);
                 return result;
             }
             console.log(result)
@@ -197,7 +197,7 @@ export class Game {
                 status: false,
                 questionState: QuestionState.PENDING,
                 error: false,
-                messsage:"Question is generating"
+                messsage: "Question is generating"
             }
         }
         if (this.questions !== undefined || this.questions.length != 0) {
@@ -214,7 +214,7 @@ export class Game {
             return {
                 status: false,
                 error: true,
-                message:"Failed to generate question",
+                message: "Failed to generate question",
             }
         }
         this.question = result;
@@ -230,10 +230,10 @@ export class Game {
         if (this.gameEndAt !== null) {
             return {
                 status: true,
-                emit:false,
+                emit: false,
                 startTime: this.gameStartedTime,
-                endTime:this.gameEndAt,
-                message:"timer started"
+                endTime: this.gameEndAt,
+                message: "timer started"
             }
         }
         const currentTime = Date.now();
@@ -241,10 +241,10 @@ export class Game {
         this.gameEndAt = currentTime + this.gameTime * 1000;
         return {
             status: true,
-            emit:true,
+            emit: true,
             startTime: this.gameStartedTime,
-            endTime:this.gameEndAt,
-            message:"timer started"
+            endTime: this.gameEndAt,
+            message: "timer started"
         }
     }
 
@@ -263,25 +263,25 @@ export class Game {
             this.players.delete(playerId)
             return {
                 host: isHost,
-                status:true
+                status: true
             }
         }
 
         const player = this.players.get(playerId);
         this.players.set(playerId, {
-                ...player,
-                status: false,
-                isReady:false,
+            ...player,
+            status: false,
+            isReady: false,
         });
-        console.log("remove player "+ player.username)
+        console.log("remove player " + player.username)
         if (player.role === PlayerRoles.HOST) {
             const newHost = Array.from(this.players.entries()).find((item) => {
-                return item[1].role == PlayerRoles.PLAYER ;
+                return item[1].role == PlayerRoles.PLAYER;
             })
             if (newHost) {
                 this.host = {
-                username: newHost[1].username,
-                user_id:newHost[0]
+                    username: newHost[1].username,
+                    user_id: newHost[0]
                 }
                 //console.log(this.host)
 
@@ -300,18 +300,18 @@ export class Game {
     }
 
     //finish player state
-    playerGameFinish({playerId,questionAnswer:playerAnswer}) {
+    playerGameFinish({ playerId, questionAnswer: playerAnswer }) {
         let player = this.players.get(playerId);
         if (!player) {
             return {
                 status: false,
                 message: "player not found",
                 error: true,
-                timeFail:false
+                timeFail: false
             }
         }
 
-        this.completedPlayerCount++ 
+        this.completedPlayerCount++
         if (this.completedPlayerCount === this.players.size) {
             console.log("game finshedd")
             this.state = GameState.FINISHED;
@@ -325,7 +325,7 @@ export class Game {
                 status: true,
                 error: false,
                 message: "Time fail, late submit",
-                timeFail:true
+                timeFail: true
             }
 
         }
@@ -336,18 +336,17 @@ export class Game {
             correct: 0,
             incorrect: 0,
         }
-        
+
         let questionMap
         questionMap = new Map(this.questions.map((item) => ([item._id.toString(), item])));
         playerAnswer.map((answer) => {
             if (answer.playerState !== undefined) {
                 const currentQuestion = questionMap.get(answer._id);
                 if (currentQuestion.answer == answer.playerState.answeredOption) {
-                    playerResult.score += 3;
+                    playerResult.score += 30;
                     playerResult.correct++
-                    console.log(playerResult.score)
                 } else {
-                    playerResult.score -= 1;
+                    playerResult.score -= 10;
                     playerResult.incorrect++;
                 }
             }
@@ -366,13 +365,13 @@ export class Game {
         return {
             status: true,
             errro: false,
-            message:"Player result updated",
+            message: "Player result updated",
         }
 
     }
 
     isFinished() {
-        return this.state === GameState.FINISHED
+        return this.state === GameState.FINISHED;
     }
 
     toJson({ password = false, teams = false, questions = false } = {}) {
@@ -386,7 +385,7 @@ export class Game {
             state: this.state,
             gameEndAt: this.gameEndAt,
             gameTime: this.gameTime,
-            gameQuestionType:this.questionType,
+            gameQuestionType: this.questionType,
         }
         if (password) {
             response = {
@@ -400,22 +399,22 @@ export class Game {
             response = {
                 ...response,
                 teamOne: this.team1,
-                teamTwo:this.team2,
+                teamTwo: this.team2,
             }
-                
+
         }
 
         if (questions) {
             if (this.questions == QuestionState.PENDING) {
                 response = {
                     ...response,
-                    questions:'Pending'
-                }    
+                    questions: 'Pending'
+                }
             } else {
                 const clientQuestion = this.questions.map((question) => { return { ...question, answer: null } });
                 response = {
                     ...response,
-                    questions:clientQuestion
+                    questions: clientQuestion
                 }
             }
         }

@@ -5,50 +5,51 @@ export const SocketEvents = {
     LEAVE_ROOM: 'leave_room',
     CLOSE_ROOM: 'close_room',
     START_GAME: 'start_game',
-    QUIT_GAME:'quit_game',
+    FINISH_GAME: 'finish_game',
+    QUIT_GAME: 'quit_game',
     GAME_RUN: 'game_run',
-    GAME_PLAYER_SUBMIT : 'player_submit',
-    GAME_STATE:'game_state', // for getting the game state
-    PLAYER_UPDATE:'player_update',
+    GAME_PLAYER_SUBMIT: 'player_submit',
+    GAME_STATE: 'game_state', // for getting the game state
+    PLAYER_UPDATE: 'player_update',
     SOCKET_ERROR: 'socket_error',
-    GAME_QUESTION:'game_question'
+    GAME_QUESTION: 'game_question'
 }
 
 export const GameState = {
-    LOBBY:'Lobby',
+    LOBBY: 'Lobby',
     STARTED: 'Started',
     RUNNING: 'Running',
-    STOPED:'stoped',
-    FINISHED:'Finished',
+    STOPED: 'stoped',
+    FINISHED: 'Finished',
 }
 
 export const PlayerRoles = {
     HOST: 'host',
-    PLAYER:'player'
+    PLAYER: 'player'
 }
 
 export const QuestionState = {
     PENDING: 'pending',
-    READY:'ready'
+    READY: 'ready'
 }
 
 export const QuestionType = {
-    AI:'ai',
-    NORMAL:'normal',
+    AI: 'ai',
+    NORMAL: 'normal',
 }
 
 export const ServerSocketEvents = {
-    CONNECTION:'connection',
+    CONNECTION: 'connection',
     DISCONNECT: 'disconnect',
     GAME_ROOM_CLOSED: 'room_closed',
     GAME_ROOM_STARTING: 'room_starting',
-    GAME_ROOM_QUESTION:'game_question_update', // get game question
+    GAME_ROOM_QUESTION: 'game_question_update', // get game question
     LOBBY_PLAYER_UPDATE: 'current_players',
     LOBBY_ROOM_UPDATE: 'current_rooms',
     GAME_ROOM_UPDATE: 'room_update', // update room
     GAME_ROOM_TIME_END: 'time_end',
-    GAME_ROOM_TIME_UPDATE:'time_update', // start timer (to client)
-    GAME_ROOM_ERROR:'game_error',
+    GAME_ROOM_TIME_UPDATE: 'time_update', // start timer (to client)
+    GAME_ROOM_ERROR: 'game_error',
     SOCKET_ERROR: 'socket_error',
-    GAME_ROOM_RUNNING:'game_running', //not used (maybe)
+    GAME_ROOM_RUNNING: 'game_running', //not used (maybe)
 }

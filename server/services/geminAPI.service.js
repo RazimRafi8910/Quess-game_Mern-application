@@ -4,7 +4,7 @@ import z, { ZodError } from 'zod';
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINAI_API_KEY });
 
 const options = z.object({
-    optionChar: z.enum(['A', 'B', 'C', 'D']).describe("corresponding charector of option, type:enum('A','B','C','D')"),
+    option: z.enum(['A', 'B', 'C', 'D']).describe("corresponding charector of option, type:enum('A','B','C','D')"),
     optionValue:z.string().describe("value of the option, type:string")
 })
 
@@ -47,7 +47,7 @@ const responseJson = {
                         items: {
                             type: "object",
                             properties: {
-                                optionChar: {
+                                option: {
                                     type: "string",
                                     description: "charector of the current option"
                                 },
@@ -84,7 +84,7 @@ Question should have four options (A,B,C,D) and one answer, generate response ba
             }
             
         });
-
+        console.log(JSON.parse(response.text));
         const questions = responseSchema.parse(JSON.parse(response.text));
         return {
             status: true,

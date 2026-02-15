@@ -22,10 +22,11 @@ export enum ServerSocketEvnets {
 export enum SocketEvents {
     GAME_RUN = 'game_run',
     GAME_QUESTION = 'game_question',
-    JOIN_ROOM = 'join_room', 
+    JOIN_ROOM = 'join_room',
     LEAVE_ROOM = 'leave_room',
     CLOSE_ROOM = 'close_room', //for clossing the room by host
     START_GAME = 'start_game',
+    FINISH_GAME = 'finish_game',// for checking the game finished and delete game state from server
     QUIT_GAME = 'quit_game', // for host and player in game running state
     PLAYER_UPDATE = 'player_update',
     GAME_PLAYER_SUBMIT = 'player_submit', // for submitting for finishing the from player
@@ -47,11 +48,11 @@ export enum QuestionStatus {
 
 export type QuestionOptionType = {
     option: Options
-    optionValue: string 
+    optionValue: string
 }
 
 export type QuestionType = {
-    _id:string
+    _id: string
     question: string
     options: QuestionOptionType[]
     answer?: Options
@@ -73,28 +74,28 @@ export type PlayerAnswer = {
 export type CategorysType = {
     categoryName: string
     totalQuestions: number
-    _id:string
+    _id: string
 }
 
 export type GameRoomPlayerType = {
-    playerId?:string
+    playerId?: string
     username: string
     role: 'host' | 'player'
     isReady: boolean
-    completed:boolean
-    status:boolean // player online status
+    completed: boolean
+    status: boolean // player online status
     socketId: string
     gameResult?: {
         score: number,
         correct: number,
-        inCorrect:number
-      }
-    rank?:number
+        inCorrect: number
+    }
+    rank?: number
 }
 
 type GameTeamType = {
     teamId: string
-    teamPlayers:GameRoomPlayerType[]
+    teamPlayers: GameRoomPlayerType[]
 }
 
 export type GameRoomType = {
@@ -102,14 +103,14 @@ export type GameRoomType = {
     gameName: string
     host: {
         username: string,
-        user_id:string
+        user_id: string
     }
-    secure:boolean
+    secure: boolean
     gameId: string
     state: string
     questions: QuestionType[] | []
     team1: GameTeamType
-    team2:GameTeamType
-    players:  Map<string,GameRoomPlayerType>
-    playerLimit:number
+    team2: GameTeamType
+    players: Map<string, GameRoomPlayerType>
+    playerLimit: number
 }

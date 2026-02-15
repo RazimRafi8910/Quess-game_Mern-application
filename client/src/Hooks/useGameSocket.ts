@@ -4,7 +4,7 @@ import { Socket } from "socket.io-client";
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 
 interface Props {
     socket: Socket | null
@@ -30,7 +30,7 @@ export function useGameSocket({ socket, gameId }: Props) {
     }, [game, userState]);
 
 
-    function updateGameState(gameState:GameRoomType) {
+    function updateGameState(gameState: GameRoomType) {
         setGame({
             ...gameState,
             players: new Map(gameState.players)
@@ -44,7 +44,7 @@ export function useGameSocket({ socket, gameId }: Props) {
             updateGameState(response.gameState)
         }
 
-        const handleSocketError = (response: { status: boolean, message: string, redirect:boolean }) => {
+        const handleSocketError = (response: { status: boolean, message: string, redirect: boolean }) => {
             if (response.message) {
                 setSocketError(response.message);
                 toast.error(response.message)
@@ -70,12 +70,12 @@ export function useGameSocket({ socket, gameId }: Props) {
             socket?.off(ServerSocketEvnets.SOCKET_ERROR, handleSocketError);
             socket?.off(ServerSocketEvnets.GAME_ROOM_ERROR, handleGameError);
         }
-    },[socket])
-    
+    }, [socket])
+
 
     function joinRoom(playerId: string, username: string) {
         let result;
-        socket?.emit(SocketEvents.JOIN_ROOM, { gameId, playerId, username }, ({ status }:{status:boolean}) => {
+        socket?.emit(SocketEvents.JOIN_ROOM, { gameId, playerId, username }, ({ status }: { status: boolean }) => {
             result = status;
         });
         return result
@@ -88,6 +88,16 @@ export function useGameSocket({ socket, gameId }: Props) {
                 console.log("failed to quit", response)
             }
             navigate('/room');
+        })
+    }
+
+    function updateGameData() {
+        socket?.emit(SocketEvents.GAME_STATE, { gameId }, (res: { status: boolean, message?: string, gameState: GameRoomType }) => {
+            if (res.status) {
+                updateGameState(res.gameState);
+                return
+            }
+            console.log(res.message);
         })
     }
 

@@ -18,7 +18,6 @@ export async function saveGameResultDB(game) {
             gameEndAt,
         };
         const response = await gameModel.create(data);
-        console.log(response);
     } catch (error) {
         console.log(error);
     } finally {

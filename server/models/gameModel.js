@@ -1,5 +1,9 @@
 import mongoose, { Schema } from 'mongoose';
 
+const GameResultType = {
+    type:Object
+}
+
 const gameSchema = new Schema({
     gameId: {
         type: String,
@@ -43,7 +47,17 @@ const gameSchema = new Schema({
             isReady: Boolean,
             status: Boolean,
             completed: Boolean,
-            socketId: String
+            socketId: String,
+            gameResult: {
+                type: {
+                    score: { type: Number },
+                    correct: { type: Number },
+                    incorrect: { type: Number },
+                    notAttented: { type: Number },
+                },
+                required: false,
+                default:null
+            }
         }
     }
 });

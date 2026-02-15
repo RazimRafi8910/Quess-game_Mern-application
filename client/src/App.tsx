@@ -20,7 +20,7 @@ function App() {
   const { loading } = useAuth();
   const location = useLocation();
   const renderCount = useRef<number>(0);
-
+  console.log(location.pathname)
   //devolopment code
   renderCount.current += 1;
 
@@ -36,7 +36,7 @@ function App() {
   return (
     <>
       <div className="app bg-gradient-to-t from-slate-950 from-50% to-emerald-950 to-90% min-h-screen">
-        { location.pathname !== '/game' ? <Navbar /> : <></> }
+        { !location.pathname.includes('/game/') ? <Navbar /> : <></> }
         {renderCount && (
           <p className="text-white">render : {renderCount.current}</p>
         )}
