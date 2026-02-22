@@ -5,7 +5,7 @@ import { Socket } from "socket.io-client"
 import { ServerSocketEvnets, SocketEvents, GameRoomType } from "../../types"
 import { useDispatch, useSelector } from "react-redux"
 import { RootState } from "../../store/store"
-import { removeGameState, setGameState } from "../../store/slice/gameSlice"
+import { removeGameState } from "../../store/slice/gameSlice"
 import DeleteModal from "../../components/modal/DeleteModal"
 import GameLobbyButton from "../../components/Buttons/GameLobbyButton"
 import { toast } from "react-toastify"
@@ -150,8 +150,8 @@ function GameLobby() {
                             handleDelete={handleLeaveRoom}
                             isOpen={modalOpen}
                             message={`${game?.host.user_id === userId
-                                    ? "You are the host of this room. If you leave, the room will be removed."
-                                    : "Are you sure you want to leave this room?"
+                                ? "You are the host of this room. If you leave, the room will be removed."
+                                : "Are you sure you want to leave this room?"
                                 }`
                             }
                             toggle={setModalOpen}

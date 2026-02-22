@@ -15,6 +15,7 @@ import GameLobby from "./pages/gamepages/GameLobby";
 import { useRef } from "react";
 import SocketProvider from "./components/SocketProvider";
 import GameResult from "./pages/gamepages/GameResult";
+import ProtectLogin from "./components/ProtectLogin";
 
 function App() {
   const { loading } = useAuth();
@@ -36,15 +37,15 @@ function App() {
   return (
     <>
       <div className="app bg-gradient-to-t from-slate-950 from-50% to-emerald-950 to-90% min-h-screen">
-        { !location.pathname.includes('/game/') ? <Navbar /> : <></> }
+        {!location.pathname.includes('/game/') ? <Navbar /> : <></>}
         {renderCount && (
           <p className="text-white">render : {renderCount.current}</p>
         )}
         <ToastContainer />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Signup />} />
+          <Route path="/login" element={<ProtectLogin><Login /></ProtectLogin>} />
+          <Route path="/register" element={<ProtectLogin><Signup /></ProtectLogin>} />
           <Route
             path="/admin"
             element={
@@ -57,7 +58,7 @@ function App() {
           {/* game routes */}
           <Route element={<AuthProtect><SocketProvider /></AuthProtect>}>
             <Route path="/room" element={<RoomsPage />} />
-          <Route
+            <Route
               path="/lobby/:id"
               element={
                 <AuthProtect>
@@ -73,7 +74,7 @@ function App() {
                 </AuthProtect>
               }
             />
-            <Route path="/result/:id" element={<GameResult/>} />
+            <Route path="/result/:id" element={<GameResult />} />
           </Route>
 
         </Routes>
