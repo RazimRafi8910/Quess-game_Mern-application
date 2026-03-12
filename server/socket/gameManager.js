@@ -231,6 +231,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         callback({ status: true, isFinished, gameState: game.toJson() });
 
         if (isFinished) {
+            console.log(game.toJson());
             const result = gameLobby.finishGame(gameId);
             if (!result.status) {
                 io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_ERROR, { message: result.message });

@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 
 const GameResultType = {
-    type:Object
+    type: Object
 }
 
 const gameSchema = new Schema({
@@ -24,7 +24,7 @@ const gameSchema = new Schema({
             user_id: mongoose.Types.ObjectId,
         },
         required: true,
-        _id:false
+        _id: false
     },
     playerLimit: {
         type: Number,
@@ -40,14 +40,17 @@ const gameSchema = new Schema({
     },
     players: {
         type: Map,
-        _id:false,
+        _id: false,
         of: {
-            usename: String,
+            username: String,
             role: { type: String, enum: ['host', 'player'] },
             isReady: Boolean,
             status: Boolean,
             completed: Boolean,
             socketId: String,
+            user_id: {
+                type: mongoose.Types.ObjectId,
+            },
             gameResult: {
                 type: {
                     score: { type: Number },
@@ -56,7 +59,7 @@ const gameSchema = new Schema({
                     notAttented: { type: Number },
                 },
                 required: false,
-                default:null
+                default: null
             }
         }
     }

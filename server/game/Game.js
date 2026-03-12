@@ -338,7 +338,7 @@ export class Game {
         }
 
         let questionMap
-        questionMap = new Map(this.questions.map((item) => ([item._id.toString(), item])));
+        questionMap = new Map(this.questions.map((item) => ([item._id.toString(), item]))); // convert array to map
         playerAnswer.map((answer) => {
             if (answer.playerState !== undefined) {
                 const currentQuestion = questionMap.get(answer._id);

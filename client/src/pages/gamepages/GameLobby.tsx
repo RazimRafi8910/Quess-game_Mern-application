@@ -14,7 +14,6 @@ import { useGameSocket } from "../../Hooks/useGameSocket"
 function GameLobby() {
     const { id: lobbyId } = useParams()
     const [error, setError] = useState<string>('');
-    //const [game, setGame] = useState<GameRoomType | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [startTimer, setStartTimer] = useState(6);
     const userReducer = useSelector((state: RootState) => state.userReducer);
@@ -160,7 +159,27 @@ function GameLobby() {
                             <div>
                                 <h1 className="text-white">{game?.gameName?.toUpperCase()}'s {" "} Lobby</h1>
                                 <p className="text-sm text-neutral-400">host: <span className="text-neutral-400">{game?.host.username}</span> </p>
-                                <p className="text-sm text-neutral-500"> <span className="text-neutral-400">ID:</span>{game?.gameId} <span><i className="ms-1 text-neutral-700 fa-solid fa-copy"></i></span> </p>
+                                <p className="text-sm text-neutral-500">
+                                    <span className="text-neutral-400">ID:</span>
+                                    <span className="ms-1">{game?.gameId}</span>
+                                    {game?.gameId && (
+                                        <button
+                                            type="button"
+                                            className="ms-2 text-neutral-700 hover:text-white"
+                                            onClick={async () => {
+                                                try {
+                                                    await navigator.clipboard.writeText(game.gameId);
+                                                    toast.success("Game ID copied to clipboard");
+                                                } catch (err) {
+                                                    console.error("Failed to copy game ID", err);
+                                                    toast.error("Failed to copy Game ID");
+                                                }
+                                            }}
+                                        >
+                                            <i className="fa-solid fa-copy" />
+                                        </button>
+                                    )}
+                                </p>
                             </div>
                             <div>
                                 <p className="m-0 text-neutral-500">{`${game?.players.size}/${game?.playerLimit}`}</p>

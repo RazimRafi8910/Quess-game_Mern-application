@@ -24,6 +24,7 @@ function UserButton() {
     // PENDING: LOGOUT
     const handleLogout = async () => {
         setIsLoading(true)
+        console.log(API)
         try {
             const response = await fetch(`${API}/user/logout`, {
                 method: "POST",
@@ -65,8 +66,8 @@ function UserButton() {
             }
         }
         document.addEventListener('mousedown', handleClickOutside);
-        return ()=> document.removeEventListener('mousedown', handleClickOutside);
-    },[])
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [])
 
     return (
         <>
@@ -75,30 +76,30 @@ function UserButton() {
                     {/* <div className="border me-2 px-1.5 align-middle border-white rounded-full">
                     </div> */}
                     {user && 'username' in user ? user.username : 'Guest'} {' '}
-                        <i className="fa-solid fa-user ms-2 text-sm"></i>
+                    <i className="fa-solid fa-user ms-2 text-sm"></i>
                 </button>
                 <div className="mt-1">
                     {
-                    drop &&
-                    <div className="bg-slate-900 focus:ring-4 rounded-md min-w-28 px-7 py-2 absolute border border-gray-700">
+                        drop &&
+                        <div className="bg-slate-900 focus:ring-4 rounded-md min-w-28 px-7 py-2 absolute border border-gray-700">
                             {
                                 user?.role == 'admin' &&
                                 <div className="mb-2 text-slate-200 text-sm hover:text-slate-300">
                                     <Link to={'/admin'}>
                                         Admin
-                                        </Link>
+                                    </Link>
                                 </div>
                             }
-                        <div className="mb-2 text-slate-200 hover:text-slate-400">
-                            <Link to={'/'}>Profile</Link>
-                        </div>
-                        <div className="mb-2 text-red-500 hover:text-red-700">
+                            <div className="mb-2 text-slate-200 hover:text-slate-400">
+                                <Link to={'/'}>Profile</Link>
+                            </div>
+                            <div className="mb-2 text-red-500 hover:text-red-700">
                                 {
                                     isLoading ? <button type="button">loging out...</button> : <button onClick={handleLogout} >logout</button>
                                 }
                             </div>
-                    </div>
-                }
+                        </div>
+                    }
                 </div>
             </div>
         </>

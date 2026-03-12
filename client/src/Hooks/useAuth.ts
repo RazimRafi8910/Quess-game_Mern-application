@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { loginUser,UserState } from "../store/slice/userSlice"
+import { loginUser, UserState } from "../store/slice/userSlice"
 import getHttpErrorMessage from "../utils/getHttpErrorMessage";
+import getBackendURL from '../utils/getBackend';
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store/store";
 
@@ -11,7 +12,9 @@ interface AuthReturn {
     error: string | null;
 }
 
-export default function useAuth() : AuthReturn {
+const backendURL = getBackendURL();
+
+export default function useAuth(): AuthReturn {
     const userState = useSelector((state: RootState) => state.userReducer);
     const [user, setUser] = useState<UserState | null>(userState);
     const [loading, setLoading] = useState<boolean>(true);
@@ -21,14 +24,14 @@ export default function useAuth() : AuthReturn {
     const getUserData = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:3001/user', {
+            const response = await fetch(`${backendURL}/user`, {
                 method: 'GET',
                 headers: {
                     'Content-type': 'application/json',
                 },
                 credentials: 'include',
             });
-            
+
             const result = await response.json();
             if (!response.ok) {
                 localStorage.removeItem('username');
@@ -67,6 +70,6 @@ export default function useAuth() : AuthReturn {
         }
         console.log("called auth hook");
     }, [userState.logined]);
-   
-    return { user,loading,error }
+
+    return { user, loading, error }
 }

@@ -13,7 +13,7 @@ function RoomsPage() {
   const searchRef = useRef<HTMLInputElement>(null);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [totalPlayers, setTotalPlayers] = useState(0);
-  const { error, data, loading } = useFetch<[GameRoomType]>('/game/rooms');
+  const { error, data, loading, getFetch } = useFetch<[GameRoomType]>('/game/rooms');
   const [currentLobby, setCurrentLobby] = useState<GameRoomType[] | null>(null);
   const socket = useOutletContext<Socket | null>()
   const navigate = useNavigate()
@@ -27,7 +27,7 @@ function RoomsPage() {
   useEffect(() => {
 
     const handleCurrentLobby = (data: any) => {
-      console.log("emited",data.players);
+      console.log("emited", data.players);
       setTotalPlayers(data.players);
     }
 
@@ -41,10 +41,10 @@ function RoomsPage() {
       toast.error(error || "Something went wrong")
       navigate('/room')
     }
-    
+
     socket?.on(ServerSocketEvnets.LOBBY_PLAYER_UPDATE, handleCurrentLobby);
     socket?.on(ServerSocketEvnets.SOCKET_ERROR, handleSocketError)
-    socket?.on(ServerSocketEvnets.LOBBY_ROOM_UPDATE,handleGameCreated)
+    socket?.on(ServerSocketEvnets.LOBBY_ROOM_UPDATE, handleGameCreated)
 
     return () => {
       socket?.off(ServerSocketEvnets.LOBBY_PLAYER_UPDATE, handleCurrentLobby);
@@ -52,12 +52,26 @@ function RoomsPage() {
       socket?.off(ServerSocketEvnets.LOBBY_PLAYER_UPDATE, handleCurrentLobby);
     }
 
-  },[socket])
+  }, [socket])
 
-  const handleSearch = () => {
+  // TODO: complete search functions!
+  const handleSearch = async () => {
     if (searchRef?.current?.value == '') {
       searchRef.current.focus();
-    } 
+    }
+
+    try {
+      const response = await getFetch<GameRoomType>({ url: `/game/search/${searchRef?.current?.value}` });
+      if (response?.success) {
+        setCurrentLobby([response?.data as GameRoomType]);
+      } else {
+        toast.error(response?.message);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+    }
   };
 
   if (!socket || !socket.connected) {
@@ -80,7 +94,7 @@ function RoomsPage() {
         <CreateGameModal isOpen={modalOpen} setModal={setModalOpen} />
         <div className="flex justify-center h-full">
           <div className="md:border border-t-2 border-neutral-700 bg-neutral-900/[0.4] rounded-md w-full md:w-1/2 mt-20 py-4">
-            <p className="text-gray-300 me-4 text-opacity-50 my-0 text-end">online: { totalPlayers }</p>
+            <p className="text-gray-300 me-4 text-opacity-50 my-0 text-end">online: {totalPlayers}</p>
             <div className="flex mb-3 mt-1 w-full gap-2 px-6">
               <div className="md:w-1/2 w-full">
                 <input
@@ -104,7 +118,7 @@ function RoomsPage() {
                 {/* <button className="px-5 bg-slate-700 h-full rounded-md border border-white text-white">Filter</button> */}
                 <button
                   type="button"
-                  onClick={()=>{setModalOpen(true)}}
+                  onClick={() => { setModalOpen(true) }}
                   className="px-4 md:px-6 py-2 rounded-md hover:bg-green-800 bg-green-950 text-lime-200 border border-lime-400"
                 >
                   Create
@@ -113,9 +127,9 @@ function RoomsPage() {
             </div>
             <hr className="border-neutral-600" />
             {loading && <Loader />}
-            <p className="text-red-500">{ error }</p>
+            <p className="text-red-500">{error}</p>
             <div className="flex-row px-6 py-2">
-              {loading == false && currentLobby && currentLobby.length > 0 ? 
+              {loading == false && currentLobby && currentLobby.length > 0 ?
                 currentLobby.map((room) => (
                   <RoomsDiv
                     key={room.gameId}
@@ -124,12 +138,12 @@ function RoomsPage() {
                     players={room.players}
                     playerLimit={room.playerLimit}
                     category={room.category}
-                    secure={ room.secure }
+                    secure={room.secure}
                   />
                 ))
                 :
                 <p className="text-neutral-300 text-center">No rooms found</p>
-               }
+              }
             </div>
           </div>
         </div>

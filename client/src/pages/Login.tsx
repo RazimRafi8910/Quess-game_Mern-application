@@ -11,6 +11,7 @@ import { loginUser } from "../store/slice/userSlice";
 import getHttpErrorMessage from "../utils/getHttpErrorMessage";
 import { toast } from "react-toastify";
 import { setUserLocalStorage } from "../utils/localStateManager";
+import getBackendURL from "../utils/getBackend";
 
 interface FormInputs {
   email: string,
@@ -19,24 +20,26 @@ interface FormInputs {
 
 const UserSchema = yup.object({
   email: yup.string().email().required(),
-  password:yup.string().required()
-})
+  password: yup.string().required()
+});
+
+const backendURL = getBackendURL();
 
 function Login() {
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
-  const dispatch:AppDispatch = useDispatch()
+  const dispatch: AppDispatch = useDispatch()
 
-  const { handleSubmit, register, formState :{ errors} } = useForm<FormInputs>({
+  const { handleSubmit, register, formState: { errors } } = useForm<FormInputs>({
     resolver: yupResolver(UserSchema),
   })
-  
+
   const onSubmit: SubmitHandler<FormInputs> = async (data) => {
     setIsLoading(true)
     try {
-      const responce = await fetch('http://localhost:3001/login', {
+      const responce = await fetch(`${backendURL}/login`, {
         method: "POST",
         headers: {
           'content-type': 'application/json',
@@ -52,22 +55,22 @@ function Login() {
       }
 
       if (result.user) {
-        const { user } = result  
+        const { user } = result
         const newUser = {
           username: user.username,
-          role:user.role,
+          role: user.role,
           email: user.email,
           id: user.id
         }
         toast.success(result.message || "Login Success", {
-          position:'top-right'
+          position: 'top-right'
         });
         dispatch(loginUser(newUser));
         // set user details to localstorage
         setUserLocalStorage(newUser);
         navigate('/')
       }
-      
+
     } catch (error) {
       console.log(error);
       if (error instanceof Error) {
@@ -81,7 +84,7 @@ function Login() {
   if (isLoading) {
     return (
       <>
-        <Loader/>
+        <Loader />
       </>
     )
   }
@@ -99,7 +102,7 @@ function Login() {
             <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-white-900">
               Login in to your account
             </h2>
-            <p className="text-red-600 text-center text-sm md:text-lg">{ error }</p>
+            <p className="text-red-600 text-center text-sm md:text-lg">{error}</p>
           </div>
 
           <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
@@ -119,7 +122,7 @@ function Login() {
                     {...register("email")}
                     className="px-2 block w-full bg-slate-950 rounded-md border-0 py-1.5 text-slate-300 shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  <p className="text-red-600 text-sm">{ errors?.email?.message }</p>
+                  <p className="text-red-600 text-sm">{errors?.email?.message}</p>
                 </div>
               </div>
 
@@ -148,7 +151,7 @@ function Login() {
                     {...register("password")}
                     className="px-2 block w-full bg-slate-950 rounded-md border-0 py-1.5 text-slate-300 shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
-                  <p className="text-sm text-red-600">{ errors?.password?.message }</p>
+                  <p className="text-sm text-red-600">{errors?.password?.message}</p>
                 </div>
               </div>
 
