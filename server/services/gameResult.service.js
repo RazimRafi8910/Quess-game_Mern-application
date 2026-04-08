@@ -7,6 +7,15 @@ export async function saveGameResultDB(game) {
 	}
     try {
         const { gameId, gameName, host, category, playerLimit, state, gameEndAt, players } = game;
+        
+        const playerResults = players.map((player)=>{
+            return {
+                playerId:player[0],
+                gameResult:player[1].gameResult,
+                gameEndAt
+            }
+        });
+
         const data = {
             gameId,
             gameName,
@@ -17,7 +26,7 @@ export async function saveGameResultDB(game) {
             gameState: state,
             gameEndAt,
         };
-        const response = await gameModel.create(data);
+        // const response = await gameModel.create(data);
     } catch (error) {
         console.log(error);
     } finally {

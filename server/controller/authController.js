@@ -112,6 +112,9 @@ export const logout = async (req, res, next) => {
 export const getUserDetails = async (req,res,next)=>{
     try {
         const user = req.user;
+        if(!user) {
+            return res.status(401).json({success:false,message:"User not authenticated"});
+        }
         let userDetails = await User.findById(user.user_id);
         if (!userDetails) {
             return res.status(401).json({ auth: false, message: "User not found" });

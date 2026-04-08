@@ -151,45 +151,49 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
     socket.on(SocketEvents.GAME_QUESTION, async ({ gameId }, callback) => {
         if (!validateSocketRoom(socket, gameId)) {
             callback({ status: false, error: true, message: "Not belong to this room" });
-            //return io.to(gameId).emit(ServerSocketEvents.SOCKET_ERROR, { message: "Not belong to this room", redirect: true });
+            return;
         }
         const game = gameLobby.getGameState(gameId);
         if (!game) {
             callback({ status: false, error: true, message: "Invalid game id or missing game, please leave the game" });
             sendSocketError(io, gameId, "Game not found", true);
             return;
-            //return io.to(gameId).emit(ServerSocketEvents.SOCKET_ERROR, { message: "invalid game Id", redirect: true });
         }
 
         //TODO: needs rectoring
         try {
             const questionStatus = await game.getQuestion();
             console.log(`get question event called by ${socket.player.username} `, socket.id)
+
             if (!questionStatus.status) {
                 if (questionStatus.error) {
                     callback({ status: false, error: true, message: questionStatus.message });
                     return;
                 }
                 if (questionStatus.questionState == QuestionState.PENDING) {
-                    console.log("pending cb send")
+                    console.log("[GAME_QUESTION] pending cb send")
                     callback({ status: false, error: false, questionState: "Pending", message: "question is fetching" });
                     return;
                 }
             }
+
             //acknowledgment cb for frontend state update
             const response = {
                 ...questionStatus,
                 questionState: "Ready",
+                questionFallback: questionStatus.fallback,
                 game: game.toJson({ questions: true }),
             }
-            console.log("question cb send");
+            console.log("[GAME_QUESTION] question cb send");
             callback(response);
+
             //game Timer starts
             const result = game.startGameTimer();
             if (result.status && result.emit) {
                 io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_TIME_UPDATE, result);
             }
         } catch (error) {
+            console.log("[GAME_QUESTION] error", error)
             callback({ status: false, error: true, message: error.message });
         }
     });
@@ -231,14 +235,13 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         callback({ status: true, isFinished, gameState: game.toJson() });
 
         if (isFinished) {
-            console.log(game.toJson());
             const result = gameLobby.finishGame(gameId);
             if (!result.status) {
                 io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_ERROR, { message: result.message });
                 return;
             }
             const saveResult = await saveGameResultDB(game.toJson());
-            console.log("game finished and saved");
+            console.log("[finish game socket event] game finished and saved");
             if (saveResult.status) io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_CLOSED, { message: "Game Finished" });
             return;
         }

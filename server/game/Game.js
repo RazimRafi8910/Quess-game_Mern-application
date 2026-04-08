@@ -15,7 +15,7 @@ export class Game {
                 username: this.host.username,
                 role: PlayerRoles.HOST,
                 isReady: false, // ready in game lobby
-                status: true, //present in game or not
+                status: true, //present in game or not (online or offline)
                 completed: false,// is player completed the game or not
                 socketId: hostSocketId,
             }]
@@ -149,13 +149,16 @@ export class Game {
 
         //question generation
         this.questions = QuestionState.PENDING;
+        this.questionFallback = false;
         this.generateQuestions().then((result) => {
             if (!result) {
-                this.questions = false
+                this.questions = null;
             }
-            this.questions = result;
+            this.questions = result.questions;
+            this.questionFallback = result.fallback;
         }).catch((e) => {
-            this.questions = false
+            console.log("",e.message);
+            this.questions = null;
         })
 
         this.state = GameState.STARTED;
@@ -168,26 +171,45 @@ export class Game {
         }
     }
 
-    //needs refacoring for all question related functions
+    //TODO: refactor this function to make it more readable and maintainable
+    //returns only array of questions
     async generateQuestions() {
         const category = this.category;
         let result;
 
         if (this.questionType == QuestionType.AI) {
-            result = await generateAiQuestion(this.category, 5);
-            if (!result.status || result.error) {
-                result = await getQuestionsByCategory(category);
-                return result;
+            const aiResult = await generateAiQuestion(this.category, 5);
+
+            if (!aiResult.status || aiResult.error) {
+                console.warn("[generateQuestions] ai questions generation failed, calling fallback normal questions generation");
+                const dbResult = await getQuestionsByCategory(category);
+                return {
+                    status: true,
+                    error: false,
+                    message: "fallback normal questions generated",
+                    fallback:true,
+                    questions: dbResult.questions,
+                };
             }
-            console.log(result)
-            const aiQuestions = serializeQuestions(result.questions)
-            return aiQuestions;
+
+            return {
+                status:true,
+                error:false,
+                fallback:false,
+                questions:serializeQuestions(aiResult.questions),
+            }
         }
+
         result = await getQuestionsByCategory(category);
         if (result.error) {
             return null
         }
-        return result.question
+        return {
+            status:true,
+            error:false,
+            fallback:false,
+            questions:result.questions,
+        }
     }
 
     async getQuestion() {
@@ -200,14 +222,15 @@ export class Game {
                 messsage: "Question is generating"
             }
         }
-        if (this.questions !== undefined || this.questions.length != 0) {
+        if (this.questions !== undefined && this.questions.length != 0) {
             return {
                 status: true,
                 error: false,
+                fallback: this.questionFallback,
                 message: "Question created",
             }
         }
-
+        console.log("[getQuestion] calling generateQuestions");
         const result = await this.generateQuestions();
 
         if (!result || result.length == 0) {
@@ -217,7 +240,7 @@ export class Game {
                 message: "Failed to generate question",
             }
         }
-        this.question = result;
+        this.question = result.questions;
 
         return {
             status: true,
@@ -352,7 +375,8 @@ export class Game {
             }
         });
 
-        playerResult.notAttent = this.questions.length - (playerResult.correct + playerResult.incorrect);
+        // Number of questions the player did not answer
+        playerResult.notAttended = this.questions.length - (playerResult.correct + playerResult.incorrect);
 
         this.players.set(playerId, {
             ...player,
@@ -388,36 +412,24 @@ export class Game {
             gameQuestionType: this.questionType,
         }
         if (password) {
-            response = {
-                ...response,
-                secure: this.secure,
-                password: this.password
-            }
+            response.secure = this.secure;
+            response.password = this.password;
         }
-
-        if (teams) {
-            response = {
-                ...response,
-                teamOne: this.team1,
-                teamTwo: this.team2,
-            }
-
+        
+        if(teams) {
+            response.teamOne = this.team1;
+            response.teamTwo = this.team2;
         }
 
         if (questions) {
             if (this.questions == QuestionState.PENDING) {
-                response = {
-                    ...response,
-                    questions: 'Pending'
-                }
+                response.questions = QuestionState.PENDING;
             } else {
-                const clientQuestion = this.questions.map((question) => { return { ...question, answer: null } });
-                response = {
-                    ...response,
-                    questions: clientQuestion
-                }
+                const clientQuestion = this.questions.map((question) =>  ({ ...question }));
+                response.questions = clientQuestion;
             }
+            response.questionFallback = this.questionFallback;
         }
-        return response
+        return response;
     }
 }

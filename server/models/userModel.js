@@ -31,6 +31,12 @@ const userSchema = new Schema({
         min: [6, "password required minimum 6 charactors"],
         select:false
     },
+    gameList:{
+        type: [Schema.Types.ObjectId],
+        default: [],
+        _id: false,
+        ref: 'games',
+    },
     createdAt: {
         type: Date,
         default: Date.now()

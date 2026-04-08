@@ -1,9 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
 
-const GameResultType = {
-    type: Object
-}
-
 const gameSchema = new Schema({
     gameId: {
         type: String,
@@ -51,16 +47,6 @@ const gameSchema = new Schema({
             user_id: {
                 type: mongoose.Types.ObjectId,
             },
-            gameResult: {
-                type: {
-                    score: { type: Number },
-                    correct: { type: Number },
-                    incorrect: { type: Number },
-                    notAttented: { type: Number },
-                },
-                required: false,
-                default: null
-            }
         }
     }
 });

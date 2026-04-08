@@ -36,6 +36,7 @@ export const QuestionState = {
 export const QuestionType = {
     AI: 'ai',
     NORMAL: 'normal',
+    AI_DOWNGRADE : 'ai_down',
 }
 
 export const ServerSocketEvents = {

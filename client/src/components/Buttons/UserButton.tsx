@@ -91,7 +91,7 @@ function UserButton() {
                                 </div>
                             }
                             <div className="mb-2 text-slate-200 hover:text-slate-400">
-                                <Link to={'/'}>Profile</Link>
+                                <Link to={'/profile'}>Profile</Link>
                             </div>
                             <div className="mb-2 text-red-500 hover:text-red-700">
                                 {

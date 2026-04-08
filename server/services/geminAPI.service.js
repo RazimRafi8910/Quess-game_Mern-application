@@ -75,6 +75,7 @@ Create ${noQuestion} well-structured quiz questions related to the ${category} t
 Each question should be accurate, unambiguous, and suitable for a quiz competition.
 Question should have four options (A,B,C,D) and one answer, generate response based on the given json object`
     try {
+        throw new Error("test error", { cause: "test cause", code: 500});
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents:prompt,
@@ -84,7 +85,6 @@ Question should have four options (A,B,C,D) and one answer, generate response ba
             }
             
         });
-        console.log(JSON.parse(response.text));
         const questions = responseSchema.parse(JSON.parse(response.text));
         return {
             status: true,
@@ -93,7 +93,7 @@ Question should have four options (A,B,C,D) and one answer, generate response ba
         }
     } catch (error) {
         if (error instanceof ZodError) {
-            console.log("error on ai response json schema");
+            console.log("[generateAiQuestion] error on ai response json schema");
             error.issues.forEach((issue) => {
             console.log({
                 code: issue.code,
@@ -102,8 +102,8 @@ Question should have four options (A,B,C,D) and one answer, generate response ba
             });
         });
         } else {
-            console.log("something went wrong")
-            console.log(error.message)
+            console.log("[generateAiQuestion] something went wrong")
+            console.log("[generateAiQuestion] error code:", error.code, "error message:", error.message)
         }
         return {
             status: false,

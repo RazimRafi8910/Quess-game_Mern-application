@@ -11,6 +11,15 @@ import { useGameSocket } from "../../Hooks/useGameSocket";
 import Loader from "../../components/Loader";
 import { toast } from "react-toastify";
 
+type GameQuestionResponse = {
+  game: GameRoomType;
+  questionState?: 'Pending' | 'Ready';
+  status: boolean;
+  error?: boolean;
+  message: string;
+  questionFallback?: boolean;
+}
+
 function Game() {
   const { id: gameId } = useParams();
   const timerRef = useRef<TimerSectionRef | null>(null);
@@ -32,7 +41,6 @@ function Game() {
 
   //get new question
   useEffect(() => {
-    // TODO: needs refactoring
     /*
       TODO(for furture) : instead of sending events muiltiple time make server an event when question is ready 
         logic :
@@ -43,26 +51,28 @@ function Game() {
 
     const timer = setInterval(() => {
       if (gameQuestion === null || gameQuestion.length == 0) {
-        socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: { game: GameRoomType, questionState?: 'Pending' | 'Ready', status: boolean, error?: boolean, message: string }) => {
+        socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: GameQuestionResponse) => {
           if (response.status && !response.error) {
             setGameQuestion(response.game.questions);
-            console.log(response.game.questions)
             updateGameState(response.game);
-            setQuestionState('Ready')
-            clearInterval(timer)
+            setQuestionState('Ready');
+            clearInterval(timer);
+            if (response.questionFallback) {
+              toast.warning('Question fallback is enabled, questions are generated from fallback database instead of AI',{autoClose: 7000});
+            }
           } else if (response.questionState == 'Pending') {
-            console.log("pending");
+            console.log("[GAME_QUESTION] pending");
             setQuestionState('Pending');
           }
           else {
-            console.log("from question update");
+            console.log("[GAME_QUESTION] from question update");
             console.log(response);
             clearInterval(timer)
             if (response.message) setError(response.message);
           }
         });
       }
-    }, 500)
+    }, 500);
     return () => clearInterval(timer);
   }, [gameQuestion, questionState]);
 

@@ -16,6 +16,7 @@ import { useRef } from "react";
 import SocketProvider from "./components/SocketProvider";
 import GameResult from "./pages/gamepages/GameResult";
 import ProtectLogin from "./components/ProtectLogin";
+import Profile from "./pages/Profile";
 
 function App() {
   const { loading } = useAuth();
@@ -46,6 +47,14 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<ProtectLogin><Login /></ProtectLogin>} />
           <Route path="/register" element={<ProtectLogin><Signup /></ProtectLogin>} />
+          <Route
+            path="/profile"
+            element={
+              <AuthProtect>
+                <Profile />
+              </AuthProtect>
+            }
+          />
           <Route
             path="/admin"
             element={
