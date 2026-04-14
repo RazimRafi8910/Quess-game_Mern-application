@@ -33,7 +33,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
 
         //join room
         socket.join(gameId)
-        const joined = game.addPlayer(playerId, username, socket.id);
+        const joined = game.addPlayer(socket.player.user_id, username, socket.id);
         if (!joined) {
             socket.leave(gameId);
             //callback({ status: false });
@@ -217,6 +217,8 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         }
     });
 
+
+    // is game finished
     socket.on(SocketEvents.FINISH_GAME, async ({ gameId }, callback) => {
         if (!validateSocketRoom(socket, gameId)) {
             callback({ status: false, isFinished: false, message: "your are not belong this room" });

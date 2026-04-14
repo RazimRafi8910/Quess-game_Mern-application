@@ -30,8 +30,8 @@ const playerGameResultSchema = new mongoose.Schema(
 playerGameResultSchema.index({ playerId: 1, gameEndAt: -1 });
 
 // Ensure a player has at most one result per game
-playerGameResultSchema.index({ playerId: 1, gameId: 1 }, { unique: true });
+//playerGameResultSchema.index({ playerId: 1, gameId: 1 }, { unique: true });
 
-const playerGameResultModel = mongoose.model('playerGameResult', playerGameResultSchema);
+const playerGameResultModel = mongoose.model('playergameresult', playerGameResultSchema);
 
 export default playerGameResultModel;

@@ -75,7 +75,6 @@ Create ${noQuestion} well-structured quiz questions related to the ${category} t
 Each question should be accurate, unambiguous, and suitable for a quiz competition.
 Question should have four options (A,B,C,D) and one answer, generate response based on the given json object`
     try {
-        throw new Error("test error", { cause: "test cause", code: 500});
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents:prompt,

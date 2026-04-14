@@ -1,7 +1,6 @@
-import jwt from 'jsonwebtoken';
 import { ServerSocketEvents } from '../utils/constants.js';
 import { handleSocketGameEvent } from './gameManager.js'
-import { getCookieByName } from '../utils/cookieExtract.js'
+import { handleAuthMiddleware } from './socketHelper.js';
 /**
  * 
  * @param {Server<import("socket.io/dist/typed-events").DefaultEventsMap, import("socket.io/dist/typed-events").DefaultEventsMap, import("socket.io/dist/typed-events").DefaultEventsMap, any>} io 
@@ -10,24 +9,12 @@ import { getCookieByName } from '../utils/cookieExtract.js'
 
 
 export const initializeSocket = (io, gameLobby) => {
+
+    io.use(handleAuthMiddleware)    
+
     io.on('connection', (socket) => {
         try {
-
-            const cookie = socket.handshake.headers.cookie;
-            const token = getCookieByName(cookie, 'token');
-
-            if (!token) {
-                throw new Error("Un-authorized handshake. Token is missing")
-            }
-
-            //socket.join(socket.handshake.auth.id);
-            const player = jwt.verify(token, process.env.JWT_KEY);
-
-            socket.player = player;
             gameLobby.addPlayer(socket.player, socket.id);
-
-            //TODO:find player from db using handshake auth id if player is undefined
-
             
             //development code
             // console.log(gameLobby.players.size);

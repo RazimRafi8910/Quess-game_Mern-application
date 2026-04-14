@@ -1,4 +1,6 @@
 import { ServerSocketEvents } from "../utils/constants.js";
+import {getCookieByName} from "../utils/cookieExtract.js";
+import jwt from "jsonwebtoken";
 
 export const validateSocketRoom = (socket, gameId) => {
     return socket.rooms.has(gameId);
@@ -16,6 +18,22 @@ export const startGameTimer = (game, io) => {
     return
 }
 
+export const handleAuthMiddleware = (socket,next)=>{
+    const cookie = socket.handshake.headers.cookie;
+    const token = getCookieByName(cookie, 'token');
+
+    if (!token) {
+        next(new Error("Un-authorized handshake. Token is missing"));
+    }
+
+    const player = jwt.verify(token,process.env.JWT_KEY);
+    if(!player){
+        next(new Error("Un-authorized user"));
+    }
+
+    socket.player = player;
+    next();
+}
 
 export const sendSocketError = (io, gameId, message, redirect = false) => {
     io.to(gameId).emit(ServerSocketEvents.SOCKET_ERROR, { message, redirect });

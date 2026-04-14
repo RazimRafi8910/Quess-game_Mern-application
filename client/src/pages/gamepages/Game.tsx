@@ -132,7 +132,7 @@ function Game() {
     console.log(submitData);
     socket?.emit(SocketEvents.GAME_PLAYER_SUBMIT, { gameId, submitData }, (response: any) => {
       if (response.timeFail) {
-        toast.error('your submit is not taken, Not finished on give time');
+        toast.error('your submit is not taken, Not finished in give time');
         navigate('/');
       }
       console.log(response)

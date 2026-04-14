@@ -1,35 +1,55 @@
 import gameModel from '../models/gameModel.js'
+import playerGameResultModel from '../models/playerGameResultModel.js';
 
 
 export async function saveGameResultDB(game) {
     if (!game) {
-		return false;
+		return {status : false};
 	}
     try {
         const { gameId, gameName, host, category, playerLimit, state, gameEndAt, players } = game;
-        
-        const playerResults = players.map((player)=>{
+
+        const playerList = players.map(([id,player])=>{
             return {
-                playerId:player[0],
-                gameResult:player[1].gameResult,
-                gameEndAt
+                username:player.username,
+                role:player.role,
+                completed:player.completed,
+                socketId:player.socketId,
+                user_id:id,
             }
         });
 
-        const data = {
+        const gameData = {
             gameId,
             gameName,
             category,
             host,
             playerLimit,
-            players: new Map(players),
+            players: playerList,
             gameState: state,
             gameEndAt,
         };
-        // const response = await gameModel.create(data);
+        
+        // saves game and player result
+        const gameSaveResponse = await Promise.all([gameModel.create(gameData),...players.map(async(player)=>{
+            const data = {
+                playerId:player[0],
+                gameResult:player[1].gameResult,
+                gameId,
+                gameEndAt
+            };
+            const response = await playerGameResultModel.insertOne(data);
+            return response
+        })]);
+
+        if(!gameSaveResponse) {
+            throw new Error("Failed to save game");
+        }
+
+        console.log(`[saveGame_service] game ${gameId} saved to db`);
+        return { status:true };
     } catch (error) {
-        console.log(error);
-    } finally {
-        return true
+        console.log("[saveGame_service] ", error.message);
+        return { status:false };
     }
 }
