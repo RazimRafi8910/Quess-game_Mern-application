@@ -1,15 +1,21 @@
 import { User } from "../models/userModel.js";
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { loginBodySchema, validate } from "../utils/validator.js";
 
 const JWT_KEY = process.env.JWT_KEY
 
 export const login = async (req, res,next) => {
-    const { email, password } = req.body
-
-    if (!email || !password) {
-        return res.status(422).json({ success:false, error:true, message: "required cretentials" })
+    const parsed = validate(loginBodySchema, req.body);
+    if (!parsed.ok) {
+        return res.status(parsed.status).json({
+            success: false,
+            error: true,
+            message: parsed.message,
+            issues: parsed.issues,
+        });
     }
+    const { email, password } = parsed.data;
 
     try {
         const user = await User.findOne({ email }).select('+password')
