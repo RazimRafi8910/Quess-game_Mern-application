@@ -334,8 +334,14 @@ export class Game {
             }
         }
 
+        //TODO: instead of counting all player count the players who are in online
         this.completedPlayerCount++
-        if (this.completedPlayerCount === this.players.size) {
+
+        let onlinePlayers = 0;
+        this.players.forEach((value)=>{
+             if( value.status ) onlinePlayers++; 
+        });
+        if (this.completedPlayerCount === onlinePlayers) {
             console.log("game finshedd")
             this.state = GameState.FINISHED;
         }
