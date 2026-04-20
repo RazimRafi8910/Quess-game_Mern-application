@@ -98,6 +98,28 @@ type GameTeamType = {
     teamPlayers: GameRoomPlayerType[]
 }
 
+type GameHistoryType = {
+    gameResult:{
+        score: number,
+        correct: number,
+        incorrect: number,
+        notAttended: number,
+    },
+    _id:string,
+    gameId:string,
+    playerId:string,
+    gameEndAt:number,
+    createdAt:Date
+}
+
+export type UserDetailsType = {
+    username:string,
+    email:string,
+    role: "admin" | "user",
+    id:string,
+    gameHistory: GameHistoryType[] | []
+}
+
 export type GameRoomType = {
     category: string
     gameName: string

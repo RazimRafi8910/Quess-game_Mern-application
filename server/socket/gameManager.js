@@ -217,6 +217,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         }
     });
 
+    // finsih game from client
     socket.on(SocketEvents.FINISH_GAME, async ({ gameId }, callback) => {
         if (!validateSocketRoom(socket, gameId)) {
             callback({ status: false, isFinished: false, message: "your are not belong this room" });
@@ -228,7 +229,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         if (!game) {
             callback({ status: false, isFinished: false, message: "game not found" });
             return;
-        }
+        } 
 
         const isFinished = game.isFinished();
 
