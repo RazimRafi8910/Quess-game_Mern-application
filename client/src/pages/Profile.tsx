@@ -7,13 +7,7 @@ import { logoutUser } from "../store/slice/userSlice";
 import getBackendURL from "../utils/getBackend";
 import getHttpErrorMessage from "../utils/getHttpErrorMessage";
 import { removeUserLocalStorage } from "../utils/localStateManager";
-
-type UserDetails = {
-  username: string;
-  email: string;
-  role: string;
-  id: string;
-};
+import { UserDetailsType } from "../types";
 
 const API = getBackendURL();
 
@@ -21,7 +15,7 @@ function Profile() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [user, setUser] = useState<UserDetails | null>(null);
+  const [user, setUser] = useState<UserDetailsType | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -47,7 +41,7 @@ function Profile() {
           throw new Error(result?.message || getHttpErrorMessage(response.status));
         }
 
-        const details: UserDetails | undefined = result?.userDetails;
+        const details: UserDetailsType | undefined = result?.userDetails;
         if (!details) {
           throw new Error("User details not found");
         }
@@ -187,6 +181,81 @@ function Profile() {
                 {user?.id || "-"}
               </p>
             </div>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-gray-700 bg-slate-950/60 px-5 py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-slate-200">Game history</p>
+                <p className="text-xs text-slate-400">Your recent results.</p>
+              </div>
+              <span className="inline-flex rounded-full border border-slate-700 bg-slate-900/40 px-3 py-1 text-xs font-semibold text-slate-200">
+                {(user?.gameHistory?.length || 0).toString()} games
+              </span>
+            </div>
+
+            {user?.gameHistory && user.gameHistory.length > 0 ? (
+              <div className="mt-4 overflow-x-auto rounded-xl border border-slate-800">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-slate-900/40 text-slate-300">
+                    <tr className="[&>th]:px-4 [&>th]:py-3 [&>th]:text-xs [&>th]:uppercase [&>th]:tracking-wider">
+                      <th>Game</th>
+                      <th>Date</th>
+                      <th className="text-right">Score</th>
+                      <th className="text-right">Correct</th>
+                      <th className="text-right">Incorrect</th>
+                      <th className="text-right">Not attended</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800 text-slate-100">
+                    {user.gameHistory
+                      .slice()
+                      .sort((a, b) => (b.gameEndAt || 0) - (a.gameEndAt || 0))
+                      .map((h) => {
+                        const when =
+                          typeof h?.gameEndAt === "number" && h.gameEndAt > 0
+                            ? new Date(h.gameEndAt).toLocaleString()
+                            : h?.createdAt
+                              ? new Date(h.createdAt).toLocaleString()
+                              : "-";
+                        let gameDate;
+                        const currentDay = Date.now()
+                        if(currentDay == h.gameEndAt){
+                          gameDate = when.split(',')[1];
+                        } else {
+                          gameDate = when.split(',')[0];
+                        }
+                        return (
+                          <tr
+                            key={h._id}
+                            className="bg-slate-950/20 hover:bg-slate-900/30 transition-colors [&>td]:px-4 [&>td]:py-3"
+                          >
+                            <td className="whitespace-nowrap">
+                              <span className="inline-flex rounded-lg border border-slate-700 bg-slate-900/30 px-2 py-1 text-xs font-semibold text-slate-200">
+                                {h.gameId || "-"}
+                              </span>
+                            </td>
+                            <td className="whitespace-nowrap text-slate-200">{gameDate}</td>
+                            <td className="text-right font-semibold">
+                              {h.gameResult?.score ?? "-"}
+                            </td>
+                            <td className="text-right">{h.gameResult?.correct ?? "-"}</td>
+                            <td className="text-right">{h.gameResult?.incorrect ?? "-"}</td>
+                            <td className="text-right">{h.gameResult?.notAttended ?? "-"}</td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/30 px-4 py-4">
+                <p className="text-sm text-slate-300">No games yet.</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Play a game and your results will show up here.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-slate-800 pt-6">

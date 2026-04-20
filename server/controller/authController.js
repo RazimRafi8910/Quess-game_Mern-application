@@ -2,6 +2,7 @@ import { User } from "../models/userModel.js";
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { loginBodySchema, validate } from "../utils/validator.js";
+import PlayerGameResultModel from "../models/playerGameResultModel.js";
 
 const JWT_KEY = process.env.JWT_KEY
 
@@ -121,11 +122,14 @@ export const getUserDetails = async (req,res,next)=>{
         if(!user) {
             return res.status(401).json({success:false,message:"User not authenticated"});
         }
-        let userDetails = await User.findById(user.user_id);
+        const userDetails = await User.findById(user.user_id);
+        const playerGameHistory = await PlayerGameResultModel.find({playerId:userDetails._id});
+        console.log(playerGameHistory);
         if (!userDetails) {
             return res.status(401).json({ auth: false, message: "User not found" });
         }
         let responseUser = {
+            gameHistory:playerGameHistory,
             username: userDetails.username,
             email: userDetails.email,
             role:userDetails.role,

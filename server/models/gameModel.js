@@ -36,11 +36,18 @@ const gameSchema = new Schema({
     },
     players: [{
         username:String,
-        role: {type:String, enum:['host','player']},
-        completed:Boolean,
         socketId:String,
-        user_id:mongoose.Types.ObjectId
-    }],
+        user_id:{
+            type:mongoose.Types.ObjectId,
+            ref:'users'
+        },
+        completed:Boolean,
+        status:Boolean,
+        role: {
+            type:String,
+            enum:["host","player"],
+        },
+    }]
 });
 
 

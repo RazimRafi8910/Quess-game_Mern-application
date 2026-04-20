@@ -28,6 +28,7 @@ export default function GameResult() {
       console.log("game not found");
       return;
     }
+    console.log("called")
     setGameStatus(game.state);
     const players = [...game.players].sort((a, b) => {
       const scoreA = a[1].gameResult?.score ?? -Infinity;

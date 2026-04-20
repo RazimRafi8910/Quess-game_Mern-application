@@ -32,18 +32,21 @@ const limiter = rateLimit({
     message: "too many request from this IP"
 });
 
+const corsOption = {
+    origin: ['http://localhost:5173', 'http://192.168.1.4:5173'],
+    credentials: true,
+    maxAge: 86400,
+    methods: ["GET", "POST", "DELETE"],
+}
+
+app.use(cors(corsOption))
+app.options("*",cors(corsOption))
 app.use(express.json())
 app.use(cookieParser())
 app.use(helmet());
 app.use(limiter);
 app.use(morgan(':remote-addr [:date[web]] :remote-user :method :url :status :response-time ms',))
 // app.use(express.urlencoded({extended:true}))
-app.use(cors({
-    origin: ['http://localhost:5173', 'http://192.168.1.4:5173'],
-    credentials: true,
-    maxAge: 86400,
-    methods: ["GET", "POST", "DELETE"],
-}))
 
 //connect mongodb database
 DBconnection()

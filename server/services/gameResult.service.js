@@ -1,5 +1,5 @@
 import gameModel from '../models/gameModel.js'
-import playerGameResultModel from '../models/playerGameResultModel.js';
+import PlayerGameResultModel from '../models/playerGameResultModel.js';
 
 
 export async function saveGameResultDB(game) {
@@ -8,18 +8,19 @@ export async function saveGameResultDB(game) {
 	}
     try {
         const { gameId, gameName, host, category, playerLimit, state, gameEndAt, players } = game;
-
+        
         const playerList = players.map(([id,player])=>{
             return {
                 username:player.username,
                 role:player.role,
+                status:player.status,
                 completed:player.completed,
                 socketId:player.socketId,
-                user_id:id,
+                user_id: id
             }
         });
 
-        const gameData = {
+        const gameResultData = {
             gameId,
             gameName,
             category,
@@ -28,26 +29,24 @@ export async function saveGameResultDB(game) {
             players: playerList,
             gameState: state,
             gameEndAt,
-        };
-        
-        // saves game and player result
-        const gameSaveResponse = await Promise.all([gameModel.create(gameData),...players.map(async(player)=>{
-            const data = {
-                playerId:player[0],
-                gameResult:player[1].gameResult,
-                gameId,
-                gameEndAt
-            };
-            const response = await playerGameResultModel.insertOne(data);
-            return response
-        })]);
-
-        if(!gameSaveResponse) {
-            throw new Error("Failed to save game");
         }
 
-        console.log(`[saveGame_service] game ${gameId} saved to db`);
-        return { status:true };
+        const playerGameresult = players.map((player)=>(
+            PlayerGameResultModel.create({ 
+                gameId,
+                playerId:player[0],
+                gameResult:player[1].gameResult,
+                gameEndAt
+            })
+        ))
+
+        const dbResponse = await Promise.allSettled([...playerGameresult,gameModel.create(gameResultData)]);
+
+        for (const response of dbResponse) {
+            if(response.status == 'rejected'){
+                console.log(`[game save service] failed db save:${response.reason}`)
+            }
+        }
     } catch (error) {
         console.log("[saveGame_service] ", error.message);
         return { status:false };
