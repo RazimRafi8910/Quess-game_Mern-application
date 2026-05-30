@@ -1,16 +1,16 @@
 import { z, ZodError } from "zod";
 
 export const loginBodySchema = z.object({
-  email: z.email({error:"invalid email"}).min(1,{error:"email is required"}),
-  password: z.string().min(8, {error:"password is required"}),
+  email: z.email({ error: "invalid email" }).min(1, { error: "email is required" }),
+  password: z.string().min(8, { error: "minimum charector should be 8" }),
 });
 
 export const regiesterBodySchema = z.object({
-    username:z.string().min(3,"username should be atleast 3 characters").max(10,"username should be with in 10 characters"),
-    email: z.email("invalid email").min(1,"email required"),
-    password: z
+  username: z.string().min(3, "username should be atleast 3 characters").max(10, "username should be with in 10 characters"),
+  email: z.email("invalid email").min(1, "email required"),
+  password: z
     .string()
-    .min(8,"Password must be atlead 8 characters")
+    .min(8, "Password must be atlead 8 characters")
     .regex('/[A-Z]/')
 })
 

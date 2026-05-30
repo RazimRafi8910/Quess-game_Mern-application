@@ -6,11 +6,12 @@ import * as yup from 'yup';
 import { useNavigate } from "react-router-dom";
 import useFetch from "../../Hooks/useFetch";
 import { getLocalStorageItem, setLocalStorageItem } from "../../utils/localStateManager";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Socket } from "socket.io-client";
 import { useOutletContext } from "react-router-dom";
 import { setGameState } from "../../store/slice/gameSlice";
 import Loader from "../Loader";
+import { RootState } from "../../store/store";
 
 interface ModalProps {
   isOpen: boolean;
@@ -58,6 +59,7 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate()
   const socket = useOutletContext<Socket | null>()
+  const user = useSelector((state: RootState) => state.userReducer.user);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const dispatch = useDispatch()
 
@@ -83,13 +85,13 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
 
   useEffect(() => {
     if (!isOpen) return;
-
+    console.log(user)
     const handleCloseOnMouse = (e: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
         handleCloseModal()
       }
     };
-
+    console.log(user)
     document.addEventListener("mousedown", handleCloseOnMouse);
     return () => {
       document.removeEventListener("mousedown", handleCloseOnMouse);
@@ -156,7 +158,10 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
                       :
                       <div className="mb-2">
                         <label className="block my-1 text-sm font-medium text-gray-900 dark:text-white">Category</label>
-                        <select {...register("category")} className="bg-gray-800/[0.5] border-gray-300 text-gray-900 test-sm rounded-lg block w-full dark:text-gray-50 p-2">
+                        <select
+                          {...register("category")}
+                          className="bg-gray-900 border border-gray-700 text-gray-100 text-sm rounded-lg block w-full p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
                           <option value={""} className="bg-gray-800" defaultValue={""} hidden>Select the Options</option>
                           {
                             category?.map((item, index) => (
@@ -180,21 +185,23 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
 
                     {showPassword && <InputForm htmlLabel="" label="password" inputType="text" placeholder="password" inputError={errors.password} register={register} required={true} />}
 
+                    {/* AI questino input */}
                     <div className="mb-2 mt-2 relative group">
                       <label className="flex justify-between cursor-pointer">
                         <input
                           type="checkbox"
+                          disabled={!user?.permission.aiAccess}
                           {...register('aiQuestion')}
                           onChange={(e) => { console.log(e.target.value) }}
                           className="sr-only peer"
                         />
-                        <label className="block my-1 text-sm font-medium text-gray-900 dark:text-gray-500">
+                        <label className={`block my-1 text-sm font-medium ${user?.permission.aiAccess ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-500"}`}>
                           AI Questions <i className="fa-light fa-circle-info"></i>
                         </label>
-                        <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
+                        <div className={`relative w-11 h-6 peer-focus:outline-none rounded-full bg-gray-200 peer ${user?.permission.aiAccess ? "dark:bg-gray-700" : "bg-gray-200 dark:bg-gray-800"} peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] ${user?.permission.aiAccess ? "after:bg-white after:border-gray-700" : "after:bg-gray-600 after:border-gray-700"} after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600`}></div>
                       </label>
                       <div className="absolute left-0 top-full mt-1 hidden group-hover:block rounded-md bg-gray-800 text-xs text-gray-100 px-2 py-1 shadow-lg z-20">
-                        Enable AI-generated questions for this room.
+                        {user?.permission.aiAccess ? "Enable AI-generated questions for this room." : "Get pro plan to access AI-generated questions"}
                       </div>
                     </div>
 
@@ -203,12 +210,23 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
                       <select
                         id="countries"
                         {...register('noPlayers', { required: true })}
-                        className="bg-gray-800/[0.5] border  border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block max-w-full min-w-20 p-1 dark:bg-gray-800/[0.5] dark:border-gray-600 dark:placeholder-gray-800 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        className="bg-gray-900 border border-gray-700 text-gray-100 text-sm rounded-lg block max-w-full min-w-20 p-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
                         <option value={2} defaultValue={2}>2</option>
                         <option value={4}>4</option>
                         <option value={6}>6</option>
                       </select>
                       {errors.noPlayers && <p className="text-red-500">{errors.noPlayers.message}</p>}
+                    </div>
+
+                    <div className="mb-2 flex justify-between">
+                      <label className="block mb-2 mt-1 text-sm font-medium text-gray-900 dark:text-white">Game visibility</label>
+                      <select
+                        className="bg-gray-900 border border-gray-700 text-gray-100 text-sm rounded-lg block max-w-full min-w-20 p-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="public">Public</option>
+                        <option value="private">Private</option>
+                      </select>
                     </div>
 
 

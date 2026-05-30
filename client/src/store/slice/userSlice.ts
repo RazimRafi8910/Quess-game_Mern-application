@@ -3,19 +3,23 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 export type UserState = {
     logined?: boolean;
     user: UserData | null;
-} 
-
-export type UserData = {
-    role:string
-    username: string
-    email: string
-    id:string
 }
 
-const initialState:UserState = {
-    logined:false,
+export type UserData = {
+    role: string
+    username: string
+    permission: {
+        aiAccess: boolean
+        noQuestionAllowed: number
+    }
+    email: string
+    id: string
+}
+
+const initialState: UserState = {
+    logined: false,
     user: null
-} 
+}
 
 const userSlice = createSlice({
     name: 'user',
@@ -34,5 +38,5 @@ const userSlice = createSlice({
     }
 })
 
-export const { loginUser,logoutUser } = userSlice.actions
+export const { loginUser, logoutUser } = userSlice.actions
 export default userSlice.reducer

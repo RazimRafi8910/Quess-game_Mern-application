@@ -6,7 +6,7 @@ import PlayerGameResultModel from "../models/playerGameResultModel.js";
 
 const JWT_KEY = process.env.JWT_KEY
 
-export const login = async (req, res,next) => {
+export const login = async (req, res, next) => {
     const parsed = validate(loginBodySchema, req.body);
     if (!parsed.ok) {
         return res.status(parsed.status).json({
@@ -21,19 +21,19 @@ export const login = async (req, res,next) => {
     try {
         const user = await User.findOne({ email }).select('+password')
         if (!user) {
-            return res.status(401).json({ success:false, error:true, message: "Invalid Email or Passwrod"});
+            return res.status(401).json({ success: false, error: true, message: "Invalid Email or Passwrod" });
         }
 
         const authState = await bcrypt.compare(password, user.password);
 
         if (!authState) {
-            return res.status(401).json({ success:false, error:true, message: "Invalid Email or Password" });
+            return res.status(401).json({ success: false, error: true, message: "Invalid Email or Password" });
         }
 
         const jwtPayload = {
             user_id: user.id,
             username: user.username,
-            role:user.role,
+            role: user.role,
         }
 
         const token = jwt.sign(jwtPayload, JWT_KEY, {
@@ -44,17 +44,18 @@ export const login = async (req, res,next) => {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24 * 7,
             sameSite: "lax",
-            
+
         })
 
         const responceUser = {
+            permission: user.permission,
             username: user.username,
             email: user.email,
-            role:user.role,
+            role: user.role,
             id: user._id,
         }
 
-        return res.status(200).json({ success:true, error: false, user: responceUser, message: "User login success" });
+        return res.status(200).json({ success: true, error: false, user: responceUser, message: "User login success" });
     } catch (error) {
         next(error)
     }
@@ -70,7 +71,7 @@ export const signup = async (req, res, next) => {
 
         // find user by username or email
         const isExistsUser = await User.find({ '$or': [{ email }, { username }] })
-        
+
         if (isExistsUser.length) {
             return res.status(406).json({ error: true, message: "User already exists with username or email, Please Login" })
         }
@@ -81,7 +82,7 @@ export const signup = async (req, res, next) => {
             username,
             email,
             password: hanshPassword,
-            role:'user'
+            role: 'user'
         });
 
         if (!newUser) {
@@ -110,39 +111,39 @@ export const logout = async (req, res, next) => {
         }
 
         res.clearCookie('token', { httpOnly: true })
-        return res.status(200).json({success:true,message:"User Logout success"})
+        return res.status(200).json({ success: true, message: "User Logout success" })
     } catch (error) {
         next(error)
     }
 }
 
-export const getUserDetails = async (req,res,next)=>{
+export const getUserDetails = async (req, res, next) => {
     try {
         const user = req.user;
-        if(!user) {
-            return res.status(401).json({success:false,message:"User not authenticated"});
+        if (!user) {
+            return res.status(401).json({ success: false, message: "User not authenticated" });
         }
         const userDetails = await User.findById(user.user_id);
-        const playerGameHistory = await PlayerGameResultModel.find({playerId:userDetails._id});
-        console.log(playerGameHistory);
+        const playerGameHistory = await PlayerGameResultModel.find({ playerId: userDetails._id });
+
         if (!userDetails) {
             return res.status(401).json({ auth: false, message: "User not found" });
         }
         let responseUser = {
-            gameHistory:playerGameHistory,
+            gameHistory: playerGameHistory,
             username: userDetails.username,
             email: userDetails.email,
-            role:userDetails.role,
+            role: userDetails.role,
             id: userDetails.id,
         }
         return res.status(200).json({ success: true, auth: true, userDetails: responseUser, message: "user found" });
-        
+
     } catch (error) {
         next(error)
     }
 }
 
-export const refreshJWTToken = (req, res,next) => {
+export const refreshJWTToken = (req, res, next) => {
     const refreshToken = req.cookies['refreshToken']
 
     if (!refreshToken) return res.status(401).json({ auth: false, message: "Token is required" });
@@ -156,15 +157,15 @@ export const refreshJWTToken = (req, res,next) => {
         let jwtPayload = {
             user_id: result.user_id,
             username: result.username,
-            role:result.role,
+            role: result.role,
         }
         let accessToken = jwt.sign(jwtPayload, JWT_KEY, {
-            expiresIn:60,
+            expiresIn: 60,
         })
         let newRefreshToken = jwt.sign(jwtPayload, JWT_KEY, {
             expiresIn: 60 * 60 * 24 * 7
         });
-        
+
         res.cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24 * 7,

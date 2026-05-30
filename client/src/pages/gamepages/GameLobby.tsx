@@ -38,19 +38,6 @@ function GameLobby() {
     useEffect(() => {
         if (!userReducer || !socket || !lobbyId) return;
 
-        // const handleRoomUpdate = (data: { gameState: GameRoomType }) => {
-        //     console.log(data)
-        //     const players = data.gameState.players;
-        //     if (gameReducer.gameId == null) {
-        //         dispatch(setGameState({gameId:data.gameState.gameId,playerId:userReducer.user?.id}))
-        //     }
-        //     setGame({
-        //         ...data.gameState,
-        //         players : new Map(players)
-        //     })
-        //     console.log("game updated")
-        // }
-
         const handleGameError = (message: string, showtoast = true, doNavigate = false) => {
             if (showtoast) {
                 toast.error(message)
@@ -69,7 +56,6 @@ function GameLobby() {
                 ...result.game,
                 players: new Map(result.game.players)
             };
-            console.log(game)
 
             if (result.status) {
                 if (result.gameStarted) {

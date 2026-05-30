@@ -106,13 +106,13 @@ export function useGameSocket({ socket, gameId }: Props) {
         socketError,
         currentPlayer,
         gameState,
-        setGameState,
         currentQuestion,
+        localgameState,
+        setGameState,
         updateGameState,
         quitGame,
         setCurrentQuestion,
         joinRoom,
-        localgameState,
         setLocalGameState,
     }
 }

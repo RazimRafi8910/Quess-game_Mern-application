@@ -22,8 +22,8 @@ function App() {
   const { loading } = useAuth();
   const location = useLocation();
   const renderCount = useRef<number>(0);
-  console.log(location.pathname)
   //devolopment code
+  //console.log(location.pathname)
   renderCount.current += 1;
 
   if (loading) {

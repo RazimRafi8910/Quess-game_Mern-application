@@ -8,30 +8,44 @@ const userSchema = new Schema({
         type: String,
         required: [true, "The username is required"],
         min: 3,
-        index:true,
+        index: true,
         unique: true,
     },
     playerId: {
         type: Number,
         unique: true,
-        index:true
+        index: true
     },
     role: {
         type: String,
         required: true
     },
+    permission: {
+        accessLevel: {
+            type: Number,
+            default: 0
+        },
+        aiAccess: {
+            type: Boolean,
+            default: false
+        },
+        noQuestionAllowed: {
+            type: Number,
+            default: 10
+        }
+    },
     email: {
         type: String,
         required: true,
-        unique:true,
+        unique: true,
     },
     password: {
         type: String,
         required: true,
         min: [6, "password required minimum 6 charactors"],
-        select:false
+        select: false
     },
-    gameList:{
+    gameList: {
         type: [Schema.Types.ObjectId],
         default: [],
         _id: false,

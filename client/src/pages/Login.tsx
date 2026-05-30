@@ -56,18 +56,12 @@ function Login() {
 
       if (result.user) {
         const { user } = result
-        const newUser = {
-          username: user.username,
-          role: user.role,
-          email: user.email,
-          id: user.id
-        }
         toast.success(result.message || "Login Success", {
           position: 'top-right'
         });
-        dispatch(loginUser(newUser));
+        dispatch(loginUser(user));
         // set user details to localstorage
-        setUserLocalStorage(newUser);
+        setUserLocalStorage(user);
         navigate('/')
       }
 

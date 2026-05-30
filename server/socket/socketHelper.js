@@ -35,8 +35,8 @@ export const handleAuthMiddleware = (socket,next)=>{
     next();
 }
 
-export const sendSocketError = (io, gameId, message, redirect = false) => {
-    io.to(gameId).emit(ServerSocketEvents.SOCKET_ERROR, { message, redirect });
+export const sendSocketError = (io, socketId, message, redirect = false) => {
+    io.to(socketId).emit(ServerSocketEvents.SOCKET_ERROR, { message, redirect });
 }
 
 
