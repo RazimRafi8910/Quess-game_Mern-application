@@ -42,7 +42,7 @@ export const createGame = (req, res, next) => {
 
 
 
-export const getGameDetails = (req, res, next) => {
+export const getGameDetails = async (req, res, next) => {
     const gameLobby = getGameLobby(req);
     const gameId = req.params.game_id;
 
@@ -50,7 +50,7 @@ export const getGameDetails = (req, res, next) => {
         return res.status(409).json({ success: false, message: "game id not found" });
     }
 
-    const game = gameLobby.getGameState(gameId);
+    const game = await gameLobby.getGameState(gameId);
 
     if (!game) {
         return res.status(404).json({ success: false, message: "Game not found" });
@@ -61,7 +61,7 @@ export const getGameDetails = (req, res, next) => {
     return res.status(200).json({ success: true, message: "game found", data });
 }
 
-export const checkGamePassword = (req, res) => {
+export const checkGamePassword = async (req, res) => {
     const { password, gameId } = req.body;
     if (!password || password == '') {
         return res.status(409).json({ success: false, message: "missing or invalid password" });
@@ -72,7 +72,7 @@ export const checkGamePassword = (req, res) => {
     }
 
     const gameLobby = getGameLobby(req);
-    const game = gameLobby.getGameState(gameId)
+    const game = await gameLobby.getGameState(gameId)
 
     if (!game) {
         return res.status(409).json({ success: false, message: "Game not found" });
@@ -102,8 +102,8 @@ export const getCategorys = async (req, res, next) => {
     }
 }
 
-export const getGameRooms = (req, res, next) => {
+export const getGameRooms = async (req, res, next) => {
     const gameLobby = getGameLobby(req);
-    const data = gameLobby.getAllGameRooms()
+    const data = await gameLobby.getAllGameRooms({ localGameOnly: false })
     return res.status(200).json({ success: true, data });
 }

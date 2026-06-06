@@ -27,6 +27,7 @@ export const login = async (req, res, next) => {
         const authState = await bcrypt.compare(password, user.password);
 
         if (!authState) {
+            console.log(`[auth controller] invalid password ${req.ip}, ${email}`)
             return res.status(401).json({ success: false, error: true, message: "Invalid Email or Password" });
         }
 

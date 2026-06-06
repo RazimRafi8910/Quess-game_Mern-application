@@ -1,14 +1,14 @@
 import { saveGameResultDB } from "../services/gameResult.service.js";
 import { ServerSocketEvents, SocketEvents, GameState, QuestionState } from "../utils/constants.js";
-import { sendSocketError, validateSocketRoom, withGameMiddleware } from './socketHelper.js';
+import { asyncWithGameMiddleware, sendSocketError, validateSocketRoom } from './socketHelper.js';
 
 export function handleSocketGameEvent(io, socket, gameLobby) {
 
     // room join
-    socket.on(SocketEvents.JOIN_ROOM, (data, callback) => {
+    socket.on(SocketEvents.JOIN_ROOM, async (data) => {
         const { gameId, playerId, username } = data;
 
-        const game = gameLobby.getGameState(gameId);
+        const game = await gameLobby.getGameState(gameId);
         if (!game) {
             console.warn(`[JOIN_ROOM] Invalid room ID: ${gameId}, socket: ${socket.id}`);
             sendSocketError(io, socket.id, "Game not found", false);
@@ -39,17 +39,18 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             return
         }
         //callback({ status: true });
+        await gameLobby.saveGameState(gameId, game);
         io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() }); //to json convert data to json format
     });
 
 
-    socket.on(SocketEvents.GAME_STATE, withGameMiddleware(io, socket, gameLobby, (data, callback, game) => {
+    socket.on(SocketEvents.GAME_STATE, asyncWithGameMiddleware(io, socket, gameLobby, (data, callback, game) => {
         callback({ status: true, message: "game found", gameState: game.toJson() });
     }));
 
     // room leaving
-    socket.on(SocketEvents.LEAVE_ROOM, (data) => {
-        const game = gameLobby.getGameState(data.gameId)
+    socket.on(SocketEvents.LEAVE_ROOM, async (data) => {
+        const game = await gameLobby.getGameState(data.gameId)
         if (!game) {
             return
         }
@@ -62,11 +63,12 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         const result = game.removePlayer(data.playerId)
         if (result.status) {
             socket.leave(data.gameId)
+            await gameLobby.aveGameState(data.gameId, game);
             io.to(data.gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() })
         }
     });
 
-    socket.on(SocketEvents.PLAYER_UPDATE, withGameMiddleware(io, socket, gameLobby, (data, callback, game) => {
+    socket.on(SocketEvents.PLAYER_UPDATE, asyncWithGameMiddleware(io, socket, gameLobby, async (data, callback, game) => {
         if (!data.playerId || !data.playerStatus) {
             callback({ status: false, message: "Player not updated" })
             return
@@ -78,14 +80,15 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             return
         }
 
+        await gameLobby.saveGameState(data.gameId, game);
         io.to(data.gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() });
     }))
 
     //start game (host)
-    socket.on(SocketEvents.START_GAME, (data) => {
+    socket.on(SocketEvents.START_GAME, async (data) => {
         const { gameId, hostId } = data;
 
-        const game = gameLobby.getGameState(gameId);
+        const game = await gameLobby.getGameState(gameId);
         if (!game) {
             console.log(`[game not found] gameId:${gameId} not found`);
             return
@@ -120,7 +123,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             callback({ status: false, error: true, message: "Not belong to this room" });
             return;
         }
-        const game = gameLobby.getGameState(gameId);
+        const game = await gameLobby.getGameState(gameId);
         if (!game) {
             callback({ status: false, error: true, message: "Invalid game id or missing game, please leave the game" });
             sendSocketError(io, gameId, "Game not found", true);
@@ -171,7 +174,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             callback({ status: false, message: "you are not belong to this room" });
             return
         }
-        const game = gameLobby.getGameState(gameId);
+        const game = await gameLobby.getGameState(gameId);
 
         if (!game) {
             callback({ status: false, message: "invalid or missing game Id" });
@@ -192,7 +195,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             return;
         }
 
-        const game = gameLobby.getGameState(gameId);
+        const game = await gameLobby.getGameState(gameId);
 
         if (!game) {
             callback({ status: false, isFinished: false, message: "game not found" });
@@ -217,8 +220,8 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
     });
 
     //quit game (host&player) - in Game
-    socket.on(SocketEvents.QUIT_GAME, ({ gameId, playerId }, callback) => {
-        const game = gameLobby.getGameState(gameId);
+    socket.on(SocketEvents.QUIT_GAME, async ({ gameId, playerId }, callback) => {
+        const game = await gameLobby.getGameState(gameId);
         console.log("quit evetnt from ", socket.id, "playerId", playerId);
         if (!socket.rooms.has(gameId)) {
             socket.emit(ServerSocketEvents.GAME_ROOM_ERROR, { message: "You are not belong to this room or closed", redirect: true });
@@ -244,7 +247,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
 
     //close room (host) - in lobby
     socket.on(SocketEvents.CLOSE_ROOM, async ({ gameId, playerId }) => {
-        const game = gameLobby.getGameState(gameId);
+        const game = await gameLobby.getGameState(gameId);
         if (!game) {
             return
         }
@@ -264,14 +267,14 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
     })
 
     //player disconnect
-    socket.on('disconnecting', () => {
+    socket.on('disconnecting', async () => {
         const [id, gameId] = [...socket.rooms]
         if (!gameId) {
             return
         }
         console.log("player disconneded");
 
-        const game = gameLobby.getGameState(gameId)
+        const game = await gameLobby.getGameState(gameId)
 
         if (!game) {
             return

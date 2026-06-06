@@ -40,7 +40,7 @@ const corsOption = {
 }
 
 app.use(cors(corsOption))
-app.options("*",cors(corsOption))
+app.options("*", cors(corsOption))
 app.use(express.json())
 app.use(cookieParser())
 app.use(helmet());
@@ -50,6 +50,7 @@ app.use(morgan(':remote-addr [:date[web]] :remote-user :method :url :status :res
 
 //connect mongodb database
 DBconnection()
+
 
 //routs
 app.use('/', appRoutes)

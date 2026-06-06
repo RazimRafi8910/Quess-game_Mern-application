@@ -3,9 +3,11 @@ import { generateGameID } from '../utils/idGenerator.js';
 import { GameState, PlayerRoles, QuestionState, QuestionType } from '../utils/constants.js'
 import { generateAiQuestion } from '../services/geminAPI.service.js';
 import { serializeQuestions } from '../utils/serializeQuestions.js';
+import { EventEmitter } from 'node:events';
 
-export class Game {
+export class Game extends EventEmitter {
     constructor(gameHost, category, gameName, password, playerLimit, hostSocketId, aiQuestion) {
+        super();
         this.host = gameHost;
         this.gameName = gameName;
         this.category = category;
@@ -157,7 +159,7 @@ export class Game {
             this.questions = result.questions;
             this.questionFallback = result.fallback;
         }).catch((e) => {
-            console.log("",e.message);
+            console.log("", e.message);
             this.questions = null;
         })
 
@@ -187,16 +189,16 @@ export class Game {
                     status: true,
                     error: false,
                     message: "fallback normal questions generated",
-                    fallback:true,
+                    fallback: true,
                     questions: dbResult.questions,
                 };
             }
 
             return {
-                status:true,
-                error:false,
-                fallback:false,
-                questions:serializeQuestions(aiResult.questions),
+                status: true,
+                error: false,
+                fallback: false,
+                questions: serializeQuestions(aiResult.questions),
             }
         }
 
@@ -205,10 +207,10 @@ export class Game {
             return null
         }
         return {
-            status:true,
-            error:false,
-            fallback:false,
-            questions:result.questions,
+            status: true,
+            error: false,
+            fallback: false,
+            questions: result.questions,
         }
     }
 
@@ -338,8 +340,8 @@ export class Game {
         this.completedPlayerCount++
 
         let onlinePlayers = 0;
-        this.players.forEach((value)=>{
-             if( value.status ) onlinePlayers++; 
+        this.players.forEach((value) => {
+            if (value.status) onlinePlayers++;
         });
         if (this.completedPlayerCount === onlinePlayers) {
             console.log("game finshedd")
@@ -404,7 +406,7 @@ export class Game {
         return this.state === GameState.FINISHED;
     }
 
-    toJson({ password = false, teams = false, questions = false } = {}) {
+    toJson({ password = false, teams = false, questions = false, cacheState = false } = {}) {
         let response = {
             host: this.host,
             gameName: this.gameName,
@@ -421,8 +423,8 @@ export class Game {
             response.secure = this.secure;
             response.password = this.password;
         }
-        
-        if(teams) {
+
+        if (teams) {
             response.teamOne = this.team1;
             response.teamTwo = this.team2;
         }
@@ -431,11 +433,27 @@ export class Game {
             if (this.questions == QuestionState.PENDING) {
                 response.questions = QuestionState.PENDING;
             } else {
-                const clientQuestion = this.questions.map((question) =>  ({ ...question }));
+                const clientQuestion = this.questions.map((question) => ({ ...question }));
                 response.questions = clientQuestion;
             }
             response.questionFallback = this.questionFallback;
         }
         return response;
+    }
+
+    static fromJson(game) {
+        let newGame = new Game(game.host, game.category, game.gameName, game.secure, game.playerLimit, game.questions, game.questionFallback);
+        newGame.gameId = game.gameId;
+        newGame.state = game.state;
+        newGame.gameEndAt = game.gameEndAt;
+        newGame.gameTime = game.gameTime;
+        newGame.gameQuestionType = game.gameQuestionType;
+        newGame.password = game.password;
+        newGame.team1 = game.team1;
+        newGame.team2 = game.team2;
+        newGame.completedPlayerCount = game.completedPlayerCount;
+        newGame.players = new Map(game.players);
+        newGame.questionFallback = game.questionFallback;
+        return newGame;
     }
 }
