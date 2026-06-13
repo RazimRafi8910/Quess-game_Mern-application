@@ -9,6 +9,7 @@ export class Lobby {
         Lobby.lobbyInstance = this;
         this.io = io;
         this.rooms = new Set();
+        this.activeGames = new Map();
         this.roomsCount = 0;
         this.players = new Map();
     }
@@ -33,7 +34,7 @@ export class Lobby {
         return this.players;
     }
 
-    createGame(gameHost, category, gameName, password, noPlayers, userId, hostSocketId, aiQuestion) {
+    async createGame(gameHost, category, gameName, password, noPlayers, userId, hostSocketId, aiQuestion) {
         //create a new game
         const newGame = new Game(gameHost, category, gameName, password, noPlayers, hostSocketId, aiQuestion);
         const player = this.players.get(userId); // add host player to the lobby state
@@ -41,10 +42,18 @@ export class Lobby {
             return new Error(`[game create, lobby] Player not found ${userId}`);
         }
         this.rooms.add(newGame.gameId);
-        redisClient.set(`game:${newGame.gameId}`, JSON.stringify(newGame.toJson({ password: true, teams: true, questions: true })));
-        this.io.emit(ServerSocketEvents.LOBBY_ROOM_UPDATE, { data: this.getAllGameRooms() });
+        await redisClient.set(`game:${newGame.gameId}`, JSON.stringify(newGame.toJson({ password: true, teams: true, questions: true })));
+
+        this.io.emit(ServerSocketEvents.LOBBY_ROOM_UPDATE, { data: await this.getAllGameRooms({ localGameOnly: false }) });
         //player joins the new socket room
         this.io.sockets.sockets.get(player.socketId).join(newGame.gameId);
+
+        // subscribe to game events
+        newGame.on(`game:${newGame.gameId}:question`, ({ gameId, questions }) => {
+            console.log(questions)
+            redisClient.set(newGame.gameId, JSON.stringify(newGame.toJson({ password: true, teams: true, questions: true })));
+            this.io.to(gameId).emit(ServerSocketEvents.GAME_QUESTIONS, { gameId, questions });
+        });
         return newGame;
     }
 
@@ -76,9 +85,9 @@ export class Lobby {
 
         const result = await Promise.all(filterdKeys.map(async (gameKey) => {
             const game = await redisClient.get(`${gameKey}`);
-            return Game.fromJson(JSON.parse(game));
+            return Game.fromJson(JSON.parse(game)).toJson({ password: true, teams: true, questions: true });
         }));
-
+        console.log(result)
         return result;
     }
 
@@ -95,7 +104,7 @@ export class Lobby {
         return null;
     }
 
-    saveGameState(gameId, gameInstance) {
+    async saveGameState(gameId, gameInstance) {
         const game = this.rooms.has(gameId);
         if (!game) {
             return {
@@ -104,19 +113,34 @@ export class Lobby {
             }
         }
         // update the game in the redis
-        redisClient.set(`game:${gameId}`, JSON.stringify(gameInstance.toJson({ password: true, teams: true, questions: true })));
+        await redisClient.set(`game:${gameId}`, JSON.stringify(gameInstance.toJson({ password: true, teams: true, questions: true })));
         return true;
     }
 
-    removeGameState(gameId) {
+    async removeGameState(gameId) {
         if (this.rooms.has(gameId)) {
-
-        }
-        if (this.rooms.has(gameId)) {
+            await redisClient.del(`game:${gameId}`);
             this.rooms.delete(gameId)
-            return true
+            return true;
         }
-        return false
+        // if (this.rooms.has(gameId)) {
+        //     this.rooms.delete(gameId)
+        //     return true
+        // }
+        // return false
+    }
+
+    async updateGameQuestions(gameId, questions) {
+        const game = this.rooms.get(gameId);
+        if (!game) {
+            return {
+                status: false,
+                message: "game not found"
+            }
+        }
+        game.questions = questions;
+        await this.saveGameState(gameId, game);
+        return true;
     }
 
 }

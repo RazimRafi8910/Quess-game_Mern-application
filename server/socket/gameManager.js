@@ -44,6 +44,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
     });
 
 
+    //game state update
     socket.on(SocketEvents.GAME_STATE, asyncWithGameMiddleware(io, socket, gameLobby, (data, callback, game) => {
         callback({ status: true, message: "game found", gameState: game.toJson() });
     }));
@@ -63,7 +64,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         const result = game.removePlayer(data.playerId)
         if (result.status) {
             socket.leave(data.gameId)
-            await gameLobby.aveGameState(data.gameId, game);
+            await gameLobby.saveGameState(data.gameId, game);
             io.to(data.gameId).emit(ServerSocketEvents.GAME_ROOM_UPDATE, { gameState: game.toJson() })
         }
     });
@@ -113,6 +114,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
             });
         })
 
+        await gameLobby.saveGameState(gameId, game);
         io.to(gameId).emit(ServerSocketEvents.GAME_ROOM_STARTING, gameState);
         return
     })
@@ -154,6 +156,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
                 questionFallback: questionStatus.fallback,
                 game: game.toJson({ questions: true }),
             }
+            console.log(response)
             console.log("[GAME_QUESTION] question cb send");
             callback(response);
 

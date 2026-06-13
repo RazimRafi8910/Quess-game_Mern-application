@@ -22,7 +22,6 @@ function RoomsPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    console.log(user)
     if (data !== null) {
       setCurrentLobby(data);
     }

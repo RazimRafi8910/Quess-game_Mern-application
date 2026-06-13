@@ -156,10 +156,14 @@ export class Game extends EventEmitter {
             if (!result) {
                 this.questions = null;
             }
+            this.emit(`game:${this.gameId}:question`, {
+                gameId: this.gameId,
+                questions: result.questions
+            });
             this.questions = result.questions;
             this.questionFallback = result.fallback;
         }).catch((e) => {
-            console.log("", e.message);
+            console.log("[game start] generateQuestions() error: ", e.message);
             this.questions = null;
         })
 
@@ -242,7 +246,7 @@ export class Game extends EventEmitter {
                 message: "Failed to generate question",
             }
         }
-        this.question = result.questions;
+        this.questions = result.questions;
 
         return {
             status: true,

@@ -1,7 +1,7 @@
 import Category from "../models/category.js";
 import { getGameLobby } from "../socket/socketManager.js";
 
-export const createGame = (req, res, next) => {
+export const createGame = async (req, res, next) => {
     try {
         const user = req.user;
         const { roomName, noPlayers, password, havePassword, category, hostName, hostSocketId, aiQuestion } = req.body;
@@ -22,7 +22,7 @@ export const createGame = (req, res, next) => {
             username: hostName,
             user_id: user.user_id
         }
-        const newGame = gameLobby.createGame(gameHost, category, roomName, password, noPlayers, user.user_id, hostSocketId, aiQuestion);
+        const newGame = await gameLobby.createGame(gameHost, category, roomName, password, noPlayers, user.user_id, hostSocketId, aiQuestion);
 
         if (!newGame) {
             return res.status(500).json({ success: false, message: "game not created" });
