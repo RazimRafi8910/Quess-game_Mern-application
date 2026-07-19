@@ -131,6 +131,7 @@ export const getUserDetails = async (req, res, next) => {
             return res.status(401).json({ auth: false, message: "User not found" });
         }
         let responseUser = {
+            permission: userDetails.permission,
             gameHistory: playerGameHistory,
             username: userDetails.username,
             email: userDetails.email,

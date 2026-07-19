@@ -5,14 +5,14 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINAI_API_KEY });
 
 const options = z.object({
     option: z.enum(['A', 'B', 'C', 'D']).describe("corresponding charector of option, type:enum('A','B','C','D')"),
-    optionValue:z.string().describe("value of the option, type:string")
+    optionValue: z.string().describe("value of the option, type:string")
 })
 
 const questionSchema = z.object({
-    _id:z.string().describe("id for the question"),
+    _id: z.string().describe("id for the question"),
     question: z.string().describe("quiz question, type:string"),
     options: z.array(options).describe("list of options of the question, type:array(option) "),
-    answer:z.enum(['A', 'B', 'C', 'D']).describe("correct option charector of the answer, type:enum('A','B','C','D')")
+    answer: z.enum(['A', 'B', 'C', 'D']).describe("correct option charector of the answer, type:enum('A','B','C','D')")
 })
 
 const responseSchema = z.object({
@@ -37,7 +37,7 @@ const responseJson = {
             items: {
                 type: "object",
                 properties: {
-                    _id: { type:'string', description:'unique random string for the questions' },
+                    _id: { type: 'string', description: 'unique random string for the questions' },
                     question: {
                         type: "string", description: "quiz question"
                     },
@@ -77,37 +77,58 @@ Question should have four options (A,B,C,D) and one answer, generate response ba
     try {
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
-            contents:prompt,
+            contents: prompt,
             config: {
                 responseMimeType: 'application/json',
                 responseJsonSchema: responseJson,
             }
-            
+
         });
+
         const questions = responseSchema.parse(JSON.parse(response.text));
         return {
             status: true,
             error: false,
-            questions:questions.questions,
+            questions: questions.questions,
         }
     } catch (error) {
         if (error instanceof ZodError) {
             console.log("[generateAiQuestion] error on ai response json schema");
             error.issues.forEach((issue) => {
-            console.log({
-                code: issue.code,
-                path: issue.path,
-                message: issue.message,
+                console.log({
+                    code: issue.code,
+                    path: issue.path,
+                    message: issue.message,
+                });
             });
-        });
         } else {
-            console.log("[generateAiQuestion] something went wrong")
-            console.log("[generateAiQuestion] error code:", error.code, "error message:", error.message)
+            console.error("[generateAiQuestion] something went wrong");
+            let structuredError = {
+                message: error.message,
+                code: error.code || error.status || undefined,
+            };
+
+            try {
+                // Gemini API errors are often JSON strings containing detailed error info
+                const parsedMessage = JSON.parse(error.message);
+                if (parsedMessage && parsedMessage.error) {
+                    structuredError = {
+                        message: parsedMessage.error.message || error.message,
+                        code: parsedMessage.error.code || error.code,
+                        status: parsedMessage.error.status,
+                        details: parsedMessage.error.details,
+                    };
+                }
+            } catch (e) {
+                console.log(e.message)
+            }
+
+            console.error("[generateAiQuestion] Structured Error Log:", JSON.stringify(structuredError, null, 2));
         }
         return {
             status: false,
-            message:error.message,
-            error:true,
+            message: error.message,
+            error: true,
         }
     }
 }

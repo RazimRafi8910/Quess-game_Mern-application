@@ -135,7 +135,8 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
         //TODO: needs rectoring
         try {
             const questionStatus = await game.getQuestion();
-            console.log(`get question event called by ${socket.player.username} `, socket.id)
+            console.log(`get question event called by ${socket.player.username}`)
+            await gameLobby.saveGameState(gameId, game);
 
             if (!questionStatus.status) {
                 if (questionStatus.error) {
@@ -143,7 +144,7 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
                     return;
                 }
                 if (questionStatus.questionState == QuestionState.PENDING) {
-                    console.log("[GAME_QUESTION] pending cb send")
+                    console.log("[GAME_QUESTION] PENDING cb send")
                     callback({ status: false, error: false, questionState: "Pending", message: "question is fetching" });
                     return;
                 }
@@ -156,8 +157,8 @@ export function handleSocketGameEvent(io, socket, gameLobby) {
                 questionFallback: questionStatus.fallback,
                 game: game.toJson({ questions: true }),
             }
-            console.log(response)
-            console.log("[GAME_QUESTION] question cb send");
+
+            console.log("[GAME_QUESTION] GENERATED question cb send");
             callback(response);
 
             //game Timer starts

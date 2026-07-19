@@ -1,6 +1,7 @@
 import { Game } from "./Game.js";
 import { GameState, ServerSocketEvents } from '../utils/constants.js'
 import redisClient from "../services/redisClient.js";
+import { QuestionType } from "../utils/constants.js";
 
 export class Lobby {
     static lobbyInstance;
@@ -35,8 +36,10 @@ export class Lobby {
     }
 
     async createGame(gameHost, category, gameName, password, noPlayers, userId, hostSocketId, aiQuestion) {
+        // question type of the game
+        const questionType = aiQuestion ? QuestionType.AI : QuestionType.NORMAL;
         //create a new game
-        const newGame = new Game(gameHost, category, gameName, password, noPlayers, hostSocketId, aiQuestion);
+        const newGame = new Game(gameHost, category, gameName, password, noPlayers, hostSocketId, questionType);
         const player = this.players.get(userId); // add host player to the lobby state
         if (!player) {
             return new Error(`[game create, lobby] Player not found ${userId}`);
@@ -50,7 +53,7 @@ export class Lobby {
 
         // subscribe to game events
         newGame.on(`game:${newGame.gameId}:question`, ({ gameId, questions }) => {
-            console.log(questions)
+            console.log("[lobby] game question generated : ");
             redisClient.set(newGame.gameId, JSON.stringify(newGame.toJson({ password: true, teams: true, questions: true })));
             this.io.to(gameId).emit(ServerSocketEvents.GAME_QUESTIONS, { gameId, questions });
         });
@@ -75,9 +78,6 @@ export class Lobby {
 
     async getAllGameRooms({ localGameOnly = true } = {}) {
         // localGameOnly used for get only games in the server room not in redis 
-        // const currentRooms = [...this.rooms.values()]
-        // const result = currentRooms.filter((game) => (game.state == GameState.LOBBY));
-        // return result;
 
         const currentRooms = await redisClient.keys("game:*");
 
@@ -87,7 +87,7 @@ export class Lobby {
             const game = await redisClient.get(`${gameKey}`);
             return Game.fromJson(JSON.parse(game)).toJson({ password: true, teams: true, questions: true });
         }));
-        console.log(result)
+
         return result;
     }
 

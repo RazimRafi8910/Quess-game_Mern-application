@@ -4,7 +4,7 @@ import TimerSection, { TimerSectionRef } from "../../components/GameComponents/T
 import ChatBox from "../../components/ChatComponents/ChatBox";
 import { useNavigate, useOutletContext, useParams, } from 'react-router-dom';
 import { Socket } from 'socket.io-client';
-import { GameRoomPlayerType, GameRoomType, GameStateType, QuestionOptionType, QuestionStatus, QuestionType, SocketEvents } from "../../types";
+import { GameRoomPlayerType, GameRoomType, GameStateType, QuestionOptionType, QuestionStatus, QuestionType, SocketEvents, ServerSocketEvnets } from "../../types";
 import AnswerIndicator from "../../components/GameComponents/AnswerIndicator";
 import SubmitModal from "../../components/modal/SubmitModal";
 import { useGameSocket } from "../../Hooks/useGameSocket";
@@ -58,7 +58,7 @@ function Game() {
             setQuestionState('Ready');
             clearInterval(timer);
             if (response.questionFallback) {
-              toast.warning('Question fallback is enabled, questions are generated from fallback database instead of AI',{autoClose: 7000});
+              toast.warning('Question fallback is enabled, questions are generated from fallback database instead of AI', { autoClose: 7000 });
             }
           } else if (response.questionState == 'Pending') {
             console.log("[GAME_QUESTION] pending");
@@ -75,6 +75,14 @@ function Game() {
     }, 500);
     return () => clearInterval(timer);
   }, [gameQuestion, questionState]);
+
+  useEffect(() => {
+    if (!socket) return
+
+    socket.on(ServerSocketEvnets.GAME_QUESTION_READY, () => {
+
+    })
+  }, [])
 
   //TODO:update the current question status
   const handleNextQuestion = () => {

@@ -22,7 +22,7 @@ export class Game extends EventEmitter {
                 socketId: hostSocketId,
             }]
         ]);
-        this.questionType = aiQuestion ? QuestionType.AI : QuestionType.NORMAL;
+        this.questionType = aiQuestion;
         this.gameStartedTime = null;
         this.gameTime = 300;
         this.gameEndAt = null;
@@ -152,6 +152,7 @@ export class Game extends EventEmitter {
         //question generation
         this.questions = QuestionState.PENDING;
         this.questionFallback = false;
+
         this.generateQuestions().then((result) => {
             if (!result) {
                 this.questions = null;
@@ -177,8 +178,7 @@ export class Game extends EventEmitter {
         }
     }
 
-    //TODO: refactor this function to make it more readable and maintainable
-    //returns only array of questions
+    // TODO: Implement sending question by emitting the event to player rather than client asking for question
     async generateQuestions() {
         const category = this.category;
         let result;
@@ -219,6 +219,7 @@ export class Game extends EventEmitter {
     }
 
     async getQuestion() {
+        console.log("[getQuestion] this.questions: ", this.questions)
         if (this.questions == QuestionState.PENDING) {
             console.log("return for pending")
             return {
@@ -421,7 +422,7 @@ export class Game extends EventEmitter {
             state: this.state,
             gameEndAt: this.gameEndAt,
             gameTime: this.gameTime,
-            gameQuestionType: this.questionType,
+            questionType: this.questionType,
         }
         if (password) {
             response.secure = this.secure;
@@ -442,22 +443,26 @@ export class Game extends EventEmitter {
             }
             response.questionFallback = this.questionFallback;
         }
+        console.log("[game toJson] question state :", response.questions);
         return response;
     }
 
     static fromJson(game) {
-        let newGame = new Game(game.host, game.category, game.gameName, game.secure, game.playerLimit, game.questions, game.questionFallback);
+        let newGame = new Game(game.host, game.category, game.gameName, game.password, game.playerLimit, game.hostSocketId, game.questionType);
         newGame.gameId = game.gameId;
         newGame.state = game.state;
+        newGame.questionType = game.questionType;
+        newGame.password = game.password;
         newGame.gameEndAt = game.gameEndAt;
         newGame.gameTime = game.gameTime;
-        newGame.gameQuestionType = game.gameQuestionType;
+        newGame.questionType = game.questionType;
         newGame.password = game.password;
-        newGame.team1 = game.team1;
-        newGame.team2 = game.team2;
+        newGame.teamOne = game.teamOne;
+        newGame.teamTwo = game.teamTwo;
         newGame.completedPlayerCount = game.completedPlayerCount;
         newGame.players = new Map(game.players);
         newGame.questionFallback = game.questionFallback;
         return newGame;
     }
 }
+//gameHost, category, gameName, password, playerLimit, hostSocketId, aiQuestion

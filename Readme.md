@@ -21,6 +21,7 @@ A real-time multiplayer quiz game built with the MERN stack where players can cr
 - **Node.js** - Runtime environment
 - **Express** - Web framework
 - **MongoDB** - Database
+- **Redis**   - Cache and state management
 - **JWT** - Authentication
 
 ### APIs
@@ -34,6 +35,7 @@ Before you begin, ensure you have the following installed:
 - Node.js (v20 or higher)
 - npm or yarn
 - MongoDB (local or Atlas account)
+- Redis Cache
 
 ### Installation
 
