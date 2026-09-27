@@ -45,18 +45,12 @@ export class Lobby {
             return new Error(`[game create, lobby] Player not found ${userId}`);
         }
         this.rooms.add(newGame.gameId);
-        await redisClient.set(`game:${newGame.gameId}`, JSON.stringify(newGame.toJson({ password: true, teams: true, questions: true })));
-
+        console.log(`[Lobby] game created: ${newGame.gameId} host: ${newGame.host.username}`)
+        const gameJson = JSON.stringify(newGame.toJson({ password: true, teams: true, questions: true }));
+        await redisClient.set(`game:${newGame.gameId}`, gameJson, "PX", 1000 * 60 * 8); //8min
         this.io.emit(ServerSocketEvents.LOBBY_ROOM_UPDATE, { data: await this.getAllGameRooms({ localGameOnly: false }) });
         //player joins the new socket room
         this.io.sockets.sockets.get(player.socketId).join(newGame.gameId);
-
-        // subscribe to game events
-        newGame.on(`game:${newGame.gameId}:question`, ({ gameId, questions }) => {
-            console.log("[lobby] game question generated : ");
-            redisClient.set(newGame.gameId, JSON.stringify(newGame.toJson({ password: true, teams: true, questions: true })));
-            this.io.to(gameId).emit(ServerSocketEvents.GAME_QUESTIONS, { gameId, questions });
-        });
         return newGame;
     }
 
@@ -77,7 +71,7 @@ export class Lobby {
     }
 
     async getAllGameRooms({ localGameOnly = true } = {}) {
-        // localGameOnly used for get only games in the server room not in redis 
+        // localGameOnly used for get only games in the server room not in redis
 
         const currentRooms = await redisClient.keys("game:*");
 
@@ -113,13 +107,17 @@ export class Lobby {
             }
         }
         // update the game in the redis
-        await redisClient.set(`game:${gameId}`, JSON.stringify(gameInstance.toJson({ password: true, teams: true, questions: true })));
+        const gameJson = JSON.stringify(gameInstance.toJson({ password: true, teams: true, questions: true }));
+        const result = await redisClient.set(`game:${gameId}`, gameJson, "EX", (60 * 8));
+        console.log(`[Lobby_save_game] ${gameId} saved to redis`,result)
         return true;
     }
 
     async removeGameState(gameId) {
         if (this.rooms.has(gameId)) {
-            await redisClient.del(`game:${gameId}`);
+            const result = await redisClient.del(`game:${gameId}`);
+            console.log("[lobby] game state removed")
+            console.log(result)
             this.rooms.delete(gameId)
             return true;
         }

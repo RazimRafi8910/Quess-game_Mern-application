@@ -1,10 +1,17 @@
 import Category from "../models/category.js";
+import { User } from "../models/userModel.js";
 import { getGameLobby } from "../socket/socketManager.js";
 
 export const createGame = async (req, res, next) => {
     try {
-        const user = req.user;
-        const { roomName, noPlayers, password, havePassword, category, hostName, hostSocketId, aiQuestion } = req.body;
+        const userId = req.user.user_id;
+        let { roomName, noPlayers, password, havePassword, category, hostName, hostSocketId, aiQuestion } = req.body;
+
+        const user = await User.findById(userId).select("permission").lean();
+
+        if (!user) {
+            return res.status(401).json({ success: false, message: "user not found" });
+        }
 
         if (!roomName || !hostName || !noPlayers || !category || !hostSocketId) {
             console.log(req.body);
@@ -17,12 +24,16 @@ export const createGame = async (req, res, next) => {
             }
         }
 
+        if (!user.permission.aiAccess && aiQuestion) {
+            aiQuestion = false; // only user with permission can access ai questions
+        }
+
         const gameLobby = getGameLobby(req);
         const gameHost = {
             username: hostName,
-            user_id: user.user_id
+            user_id: userId,
         }
-        const newGame = await gameLobby.createGame(gameHost, category, roomName, password, noPlayers, user.user_id, hostSocketId, aiQuestion);
+        const newGame = await gameLobby.createGame(gameHost, category, roomName, password, noPlayers, userId, hostSocketId, aiQuestion);
 
         if (!newGame) {
             return res.status(500).json({ success: false, message: "game not created" });
@@ -31,7 +42,7 @@ export const createGame = async (req, res, next) => {
         //response data
         const data = {
             gameId: newGame.gameId,
-            playerId: user.user_id
+            playerId: userId,
         }
 
         return res.status(200).json({ success: true, message: "game created successfuly", data });

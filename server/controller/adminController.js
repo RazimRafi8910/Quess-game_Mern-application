@@ -31,7 +31,7 @@ const AdminController = {
                 options,
                 answer,
                 category: questionCategory.categoryName,
-                isListed:true
+                isListed: true
             }
             const newQuestion = await Question.create(questionData);
 
@@ -41,7 +41,7 @@ const AdminController = {
 
             return res.status(201).json({ success: true, message: "Question Created Successfully", data: newQuestion });
         } catch (error) {
-            console.error('[Question create error]'+error.message);
+            console.error('[Question create error]' + error.message);
             next(error);
         }
     },
@@ -49,7 +49,7 @@ const AdminController = {
     deleteQuestion: async (req, res, next) => {
         try {
             const question_id = req.params.question_id;
-            
+
             if (!question_id) {
                 session.endSession()
                 return res.status(409).json({ message: "Question ID is missing", success: false });
@@ -60,13 +60,13 @@ const AdminController = {
             if (!questionDelete) {
                 return res.status(500).json({ message: "Qeustion not deleted ", success: false, });
             }
-            
+
             if (questionDelete.category) {
                 const questionCategoryUpdate = await Category.updateOne(
                     { categoryName: questionDelete.category },
                     { $inc: { totalQuestions: -1 } }
                 );
-                
+
                 if (questionCategoryUpdate.modifiedCount == 0) {
                     return res.status(500).json({ message: "Question category not updated", success: false, });
                 }
@@ -74,7 +74,7 @@ const AdminController = {
 
             return res.status(200).json({ message: "Question deleted", success: false, });
         } catch (error) {
-            console.error('[Question delete error]'+error.message);
+            console.error('[Question delete error]' + error.message);
             next(error)
         }
     },
@@ -97,7 +97,7 @@ const AdminController = {
                 return res.status(500).json({ message: "failed create category", success: false });
             }
 
-            return res.status(200).json({ message: "category created succesfully",success: true, data:newCategory });
+            return res.status(200).json({ message: "category created succesfully", success: true, data: newCategory });
         } catch (error) {
             console.error("[Category Creation Error]:", error.message)
             if (error.code === 11000) {  // MongoDB duplicate key error code
@@ -120,13 +120,13 @@ const AdminController = {
     deleteCategory: async (req, res, next) => {
         try {
             const categoryId = req.params.category_id;
-            
+
             if (!categoryId) {
                 return res.status(409).json({ message: "Bad request", success: false });
             }
 
             const result = await Category.findOneAndDelete({ _id: categoryId })
-                        
+
             if (!result) {
                 return res.status(409).json({ message: "Category not found", success: false });
             }
@@ -141,7 +141,7 @@ const AdminController = {
         }
     },
 
-    getAllUsers: async(req, res, next) => {
+    getAllUsers: async (req, res, next) => {
         try {
             const users = await User.find().limit(10).lean();
             return res.status(200).json({ success: true, message: "users founded", data: users });

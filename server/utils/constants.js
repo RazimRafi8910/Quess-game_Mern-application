@@ -12,7 +12,8 @@ export const SocketEvents = {
     GAME_STATE: 'game_state', // for getting the game state
     PLAYER_UPDATE: 'player_update',
     SOCKET_ERROR: 'socket_error',
-    GAME_QUESTION: 'game_question'
+    GAME_QUESTION: 'game_question',
+    GET_GAME_QUESTION: "get_game_question", // event for client to get the game question when pending or when game restart
 }
 
 export const GameState = {
@@ -30,13 +31,14 @@ export const PlayerRoles = {
 
 export const QuestionState = {
     PENDING: 'pending',
-    READY: 'ready'
+    READY: 'ready',
+    FAILED: 'failed'
 }
 
 export const QuestionType = {
     AI: 'ai',
     NORMAL: 'normal',
-    AI_DOWNGRADE : 'ai_down',
+    AI_DOWNGRADE: 'ai_down',
 }
 
 export const ServerSocketEvents = {
@@ -53,4 +55,5 @@ export const ServerSocketEvents = {
     GAME_ROOM_ERROR: 'game_error',
     SOCKET_ERROR: 'socket_error',
     GAME_ROOM_RUNNING: 'game_running', //not used (maybe)
+    GAME_ROOM_QUESTION_READY: 'question_ready', // server event for sending question when ready
 }

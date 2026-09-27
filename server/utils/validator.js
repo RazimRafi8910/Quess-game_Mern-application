@@ -2,7 +2,7 @@ import { z, ZodError } from "zod";
 
 export const loginBodySchema = z.object({
   email: z.email({ error: "invalid email" }).min(1, { error: "email is required" }),
-  password: z.string().min(8, { error: "minimum charector should be 8" }),
+  password: z.string().min(1, "password is required"),
 });
 
 export const regiesterBodySchema = z.object({

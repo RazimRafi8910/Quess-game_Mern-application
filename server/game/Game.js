@@ -3,11 +3,9 @@ import { generateGameID } from '../utils/idGenerator.js';
 import { GameState, PlayerRoles, QuestionState, QuestionType } from '../utils/constants.js'
 import { generateAiQuestion } from '../services/geminAPI.service.js';
 import { serializeQuestions } from '../utils/serializeQuestions.js';
-import { EventEmitter } from 'node:events';
 
-export class Game extends EventEmitter {
+export class Game {
     constructor(gameHost, category, gameName, password, playerLimit, hostSocketId, aiQuestion) {
-        super();
         this.host = gameHost;
         this.gameName = gameName;
         this.category = category;
@@ -152,22 +150,6 @@ export class Game extends EventEmitter {
         //question generation
         this.questions = QuestionState.PENDING;
         this.questionFallback = false;
-
-        this.generateQuestions().then((result) => {
-            if (!result) {
-                this.questions = null;
-            }
-            this.emit(`game:${this.gameId}:question`, {
-                gameId: this.gameId,
-                questions: result.questions
-            });
-            this.questions = result.questions;
-            this.questionFallback = result.fallback;
-        }).catch((e) => {
-            console.log("[game start] generateQuestions() error: ", e.message);
-            this.questions = null;
-        })
-
         this.state = GameState.STARTED;
 
         return {
@@ -178,73 +160,110 @@ export class Game extends EventEmitter {
         }
     }
 
-    // TODO: Implement sending question by emitting the event to player rather than client asking for question
-    async generateQuestions() {
-        const category = this.category;
+
+    async generateGameQuestion() {
         let result;
-
         if (this.questionType == QuestionType.AI) {
-            const aiResult = await generateAiQuestion(this.category, 5);
-
-            if (!aiResult.status || aiResult.error) {
-                console.warn("[generateQuestions] ai questions generation failed, calling fallback normal questions generation");
-                const dbResult = await getQuestionsByCategory(category);
-                return {
-                    status: true,
-                    error: false,
-                    message: "fallback normal questions generated",
-                    fallback: true,
-                    questions: dbResult.questions,
-                };
+            result = await generateAiQuestion(this.category, 5) // 5 for testing only
+            if (!result.status || result.error) {
+                console.log(`[question generation] ai question generation failed, fallback to normal question generation`)
+                this.questionFallback = true
+                result.questions = await getQuestionsByCategory(this.category); //fallback question generation
             }
-
-            return {
-                status: true,
-                error: false,
-                fallback: false,
-                questions: serializeQuestions(aiResult.questions),
+        } else {
+            result = await getQuestionsByCategory(this.category);
+            if (!result.status || result.error) {
+                console.log(`[question generation] normal question generation failed`)
+                this.questionFallback = true
             }
         }
 
-        result = await getQuestionsByCategory(category);
-        if (result.error) {
-            return null
-        }
+        this.questions = serializeQuestions(result.questions);
+        this.questionFallback = false;
         return {
-            status: true,
-            error: false,
-            fallback: false,
-            questions: result.questions,
+            status: result.status,
+            error: result.error,
+            questions: this.questions,
+            questionFallback: result.fallback
         }
     }
 
+    // TODO: Implement sending question by emitting the event to player rather than client asking for question
+//     async generateQuestions() {
+//         const category = this.category;
+//         let result;
+//
+//         if (this.questionType == QuestionType.AI) {
+//             const aiResult = await generateAiQuestion(this.category, 5);
+//
+//             if (!aiResult.status || aiResult.error) {
+//                 console.warn("[generateQuestions] ai questions generation failed, calling fallback normal questions generation");
+//                 const dbResult = await getQuestionsByCategory(category);
+//                 return {
+//                     status: true,
+//                     error: false,
+//                     message: "fallback normal questions generated",
+//                     fallback: true,
+//                     questions: dbResult.questions,
+//                 };
+//             }
+//
+//             return {
+//                 status: true,
+//                 error: false,
+//                 fallback: false,
+//                 questions: serializeQuestions(aiResult.questions),
+//             }
+//         }
+//
+//         result = await getQuestionsByCategory(category);
+//         if (result.error) {
+//             return null
+//         }
+//         return {
+//             status: true,
+//             error: false,
+//             fallback: false,
+//             questions: result.questions,
+//         }
+//     }
+
     async getQuestion() {
-        console.log("[getQuestion] this.questions: ", this.questions)
+        //question pending
         if (this.questions == QuestionState.PENDING) {
-            console.log("return for pending")
+            console.log("[getQuestion] returned pending")
             return {
                 status: false,
                 questionState: QuestionState.PENDING,
                 error: false,
-                messsage: "Question is generating"
+                messsage: "Question is generating",
+                fallback: null,
+                gameStateUpdated:false
             }
         }
+
+        //question generated
         if (this.questions !== undefined && this.questions.length != 0) {
             return {
                 status: true,
                 error: false,
+                questionstate: QuestionState.READY,
                 fallback: this.questionFallback,
                 message: "Question created",
+                gameStateUpdated:false,
             }
         }
-        console.log("[getQuestion] calling generateQuestions");
-        const result = await this.generateQuestions();
+        console.log("[getQuestion] question failed to generate, calling generateQuestions");
+        const result = await this.generateGameQuestion();
 
         if (!result || result.length == 0) {
             return {
                 status: false,
                 error: true,
+                fallback: this.questionFallback,
+                questionState:QuestionState.FAILED,
                 message: "Failed to generate question",
+                gameStateUpdated:false
             }
         }
         this.questions = result.questions;
@@ -252,7 +271,9 @@ export class Game extends EventEmitter {
         return {
             status: true,
             error: false,
+            questionState : QuestionState.READY,
             message: "question created",
+            gameStateUpdated:true,
         }
     }
 
@@ -443,7 +464,6 @@ export class Game extends EventEmitter {
             }
             response.questionFallback = this.questionFallback;
         }
-        console.log("[game toJson] question state :", response.questions);
         return response;
     }
 
@@ -455,10 +475,10 @@ export class Game extends EventEmitter {
         newGame.password = game.password;
         newGame.gameEndAt = game.gameEndAt;
         newGame.gameTime = game.gameTime;
-        newGame.questionType = game.questionType;
         newGame.password = game.password;
         newGame.teamOne = game.teamOne;
         newGame.teamTwo = game.teamTwo;
+        newGame.questions = game.questions;
         newGame.completedPlayerCount = game.completedPlayerCount;
         newGame.players = new Map(game.players);
         newGame.questionFallback = game.questionFallback;

@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 interface ResponseType<T = unknown> {
   success: boolean,
   message?: string,
-  data?:T
+  data?: T
 }
 
 type GetFetchParamsType = {
@@ -22,12 +22,12 @@ type ReturnData<T> = {
   error: string | null
   refresh: () => void
   getPostRequest: <D>(url: string, data: D) => Promise<ResponseType | undefined>
-  getFetch:<T>({url,method,body,headers}:GetFetchParamsType)=>Promise<ResponseType<T> | undefined>
+  getFetch: <T>({ url, method, body, headers }: GetFetchParamsType) => Promise<ResponseType<T> | undefined>
 };
 
 const backEndUrl = getBackendURL();
 
-export default function useFetch<T = unknown>(url?:string | null,autoFetch = true ): ReturnData<T> {
+export default function useFetch<T = unknown>(url?: string | null, autoFetch = true): ReturnData<T> {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<T | null>(null);
@@ -52,7 +52,7 @@ export default function useFetch<T = unknown>(url?:string | null,autoFetch = tru
       }
 
       setData(result.data);
-      
+
     } catch (error) {
       console.error(error);
       if (error instanceof Error) {
@@ -63,7 +63,7 @@ export default function useFetch<T = unknown>(url?:string | null,autoFetch = tru
     }
   }, [url]);
 
-  const getPostRequest = async<D = unknown>(url: string, data: D):Promise<ResponseType | undefined> => {
+  const getPostRequest = async<D = unknown>(url: string, data: D): Promise<ResponseType | undefined> => {
     setError(null);
     setLoading(true);
     try {
@@ -72,7 +72,7 @@ export default function useFetch<T = unknown>(url?:string | null,autoFetch = tru
         headers: {
           'Content-type': 'application/json'
         },
-        body:JSON.stringify(data),
+        body: JSON.stringify(data),
         credentials: 'include'
       });
       const result = await response.json();
@@ -108,13 +108,13 @@ export default function useFetch<T = unknown>(url?:string | null,autoFetch = tru
           'Content-type': 'application/json',
           ...headers,
         },
-        body:body ? JSON.stringify(body) : undefined,
+        body: body ? JSON.stringify(body) : undefined,
         credentials: 'include'
       });
 
       //to store the json response
       let result;
-      
+
       try {
         result = await response.json();
       } catch (error) {
@@ -127,16 +127,16 @@ export default function useFetch<T = unknown>(url?:string | null,autoFetch = tru
       }
 
       if (result.success) {
-        toast.success(result.message,{autoClose:1000});
+        toast.success(result.message, { autoClose: 1000 });
         return result as ResponseType<T>;
       } else {
         throw new Error(result?.message || "Unknown Error Occured");
       }
     } catch (error) {
-      if (error instanceof Error) {        
+      if (error instanceof Error) {
         console.error(error);
-        setError(error.message);
-        toast.error(error.message);
+        setError("Internal server error");
+        toast.error("Internal server error");
       }
       return undefined
     } finally {
