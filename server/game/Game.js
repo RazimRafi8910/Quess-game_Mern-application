@@ -188,46 +188,6 @@ export class Game {
         }
     }
 
-    // TODO: Implement sending question by emitting the event to player rather than client asking for question
-//     async generateQuestions() {
-//         const category = this.category;
-//         let result;
-//
-//         if (this.questionType == QuestionType.AI) {
-//             const aiResult = await generateAiQuestion(this.category, 5);
-//
-//             if (!aiResult.status || aiResult.error) {
-//                 console.warn("[generateQuestions] ai questions generation failed, calling fallback normal questions generation");
-//                 const dbResult = await getQuestionsByCategory(category);
-//                 return {
-//                     status: true,
-//                     error: false,
-//                     message: "fallback normal questions generated",
-//                     fallback: true,
-//                     questions: dbResult.questions,
-//                 };
-//             }
-//
-//             return {
-//                 status: true,
-//                 error: false,
-//                 fallback: false,
-//                 questions: serializeQuestions(aiResult.questions),
-//             }
-//         }
-//
-//         result = await getQuestionsByCategory(category);
-//         if (result.error) {
-//             return null
-//         }
-//         return {
-//             status: true,
-//             error: false,
-//             fallback: false,
-//             questions: result.questions,
-//         }
-//     }
-
     async getQuestion() {
         //question pending
         if (this.questions == QuestionState.PENDING) {

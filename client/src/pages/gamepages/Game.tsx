@@ -77,23 +77,6 @@ function Game() {
       }
     });
 
-    // if (gameQuestion === null || gameQuestion.length === 0) {
-    //   socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: GameQuestionResponse) => {
-    //     if (response.status && !response.error) {
-    //       updateGameQuestion(response);
-    //     } else if (response.questionState == 'Pending') {
-    //       console.log("[GAME_QUESTION] pending");
-    //       setQuestionState('Pending');
-    //       socket.on(ServerSocketEvnets.GAME_ROOM_QUESTION_READY, updateGameQuestion);
-    //     }
-    //     else {
-    //       console.log("[GAME_QUESTION] from question update");
-    //       console.log(response);
-    //       setQuestionState("Error")
-    //       if (response.message) setError(response.message);
-    //     }
-    //   })
-    // }
     return () => {
       socket?.off(ServerSocketEvnets.GAME_ROOM_QUESTION_READY, updateGameQuestion);
       //clearInterval(timer);
