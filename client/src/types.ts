@@ -16,12 +16,13 @@ export enum ServerSocketEvnets {
     GAME_ROOM_STARTING = 'room_starting',
     GAME_ROOM_CLOSED = 'room_closed',
     GAME_ROOM_TIME_END = 'time_end',
+    GAME_ROOM_QUESTION_READY = 'question_ready', //server event for sending question when ready
     GAME_ROOM_TIME_UPDATE = 'time_update' //to start the timer, server send game end time
 }
 
 export enum SocketEvents {
     GAME_RUN = 'game_run',
-    GAME_QUESTION = 'game_question',
+    GAME_QUESTION = 'game_question', // for getting from server
     JOIN_ROOM = 'join_room',
     LEAVE_ROOM = 'leave_room',
     CLOSE_ROOM = 'close_room', //for clossing the room by host
@@ -30,6 +31,7 @@ export enum SocketEvents {
     QUIT_GAME = 'quit_game', // for host and player in game running state
     PLAYER_UPDATE = 'player_update',
     GAME_PLAYER_SUBMIT = 'player_submit', // for submitting for finishing the from player
+
     GAME_STATE = 'game_state',
     SOCKET_ERROR = 'socket_error'
 }
@@ -99,24 +101,24 @@ type GameTeamType = {
 }
 
 type GameHistoryType = {
-    gameResult:{
+    gameResult: {
         score: number,
         correct: number,
         incorrect: number,
         notAttended: number,
     },
-    _id:string,
-    gameId:string,
-    playerId:string,
-    gameEndAt:number,
-    createdAt:Date
+    _id: string,
+    gameId: string,
+    playerId: string,
+    gameEndAt: number,
+    createdAt: Date
 }
 
 export type UserDetailsType = {
-    username:string,
-    email:string,
+    username: string,
+    email: string,
     role: "admin" | "user",
-    id:string,
+    id: string,
     gameHistory: GameHistoryType[] | []
 }
 

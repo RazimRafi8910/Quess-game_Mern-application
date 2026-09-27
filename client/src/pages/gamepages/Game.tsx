@@ -4,7 +4,7 @@ import TimerSection, { TimerSectionRef } from "../../components/GameComponents/T
 import ChatBox from "../../components/ChatComponents/ChatBox";
 import { useNavigate, useOutletContext, useParams, } from 'react-router-dom';
 import { Socket } from 'socket.io-client';
-import { GameRoomPlayerType, GameRoomType, GameStateType, QuestionOptionType, QuestionStatus, QuestionType, SocketEvents } from "../../types";
+import { GameRoomPlayerType, GameRoomType, GameStateType, QuestionOptionType, QuestionStatus, QuestionType, SocketEvents, ServerSocketEvnets } from "../../types";
 import AnswerIndicator from "../../components/GameComponents/AnswerIndicator";
 import SubmitModal from "../../components/modal/SubmitModal";
 import { useGameSocket } from "../../Hooks/useGameSocket";
@@ -18,6 +18,7 @@ type GameQuestionResponse = {
   error?: boolean;
   message: string;
   questionFallback?: boolean;
+  ackFunc?: (status:boolean) => void;
 }
 
 function Game() {
@@ -31,50 +32,56 @@ function Game() {
   const [error, setError] = useState<string>('')
   const [gameQuestion, setGameQuestion] = useState<QuestionType[] | null>(null);
   const [questionAttented, setQestionAttented] = useState(0);
-  const [questionState, setQuestionState] = useState<'Idle' | 'Pending' | 'Ready'>('Idle');
+  const [questionState, setQuestionState] = useState<'Idle' | 'Pending' | 'Ready' | 'Error'>('Idle');
 
   useEffect(() => {
+    console.log(gameId)
     if (gameState == GameStateType.FINISHED) {
       setSubmit(true);
     }
-  }, [])
+  }, []);
 
   //get new question
   useEffect(() => {
     /*
-      TODO(for furture) : instead of sending events muiltiple time make server an event when question is ready 
+      TODO(for furture) : instead of sending events muiltiple time make server an event when question is ready
         logic :
         send get question event -> server send question if question is ready or send pending -> here set question if question came or pending then
-        set question loading true and wait for the server question event 
+        set question loading true and wait for the server question event
     **/
     if (questionState == 'Ready') return;
 
-    const timer = setInterval(() => {
-      if (gameQuestion === null || gameQuestion.length == 0) {
-        socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: GameQuestionResponse) => {
-          if (response.status && !response.error) {
-            setGameQuestion(response.game.questions);
-            updateGameState(response.game);
-            setQuestionState('Ready');
-            clearInterval(timer);
-            if (response.questionFallback) {
-              toast.warning('Question fallback is enabled, questions are generated from fallback database instead of AI',{autoClose: 7000});
-            }
-          } else if (response.questionState == 'Pending') {
-            console.log("[GAME_QUESTION] pending");
-            setQuestionState('Pending');
-          }
-          else {
-            console.log("[GAME_QUESTION] from question update");
-            console.log(response);
-            clearInterval(timer)
-            if (response.message) setError(response.message);
-          }
-        });
+    const updateGameQuestion = (response: GameQuestionResponse) => {
+      console.log(response)
+      if (response.status && !response.error) {
+        console.log(response.game)
+        setGameQuestion(response.game.questions);
+        updateGameState(response.game);
+        setQuestionState('Ready');
+        response.ackFunc?.(true);
+        //clearInterval(questionErrorIntervel)
+      } else {
+        response.ackFunc?.(false);
+        setQuestionState('Pending')
       }
-    }, 500);
-    return () => clearInterval(timer);
-  }, [gameQuestion, questionState]);
+    }
+
+    // recives the server generate question success event
+    socket?.on(ServerSocketEvnets.GAME_ROOM_QUESTION_READY, updateGameQuestion);
+
+    // send get question event of mount
+    socket?.emit(SocketEvents.GAME_QUESTION, { gameId }, (response: GameQuestionResponse) => {
+      if (response.questionState == "Ready") {
+        updateGameQuestion(response);
+        socket.off(ServerSocketEvnets.GAME_ROOM_QUESTION_READY, updateGameQuestion)
+      }
+    });
+
+    return () => {
+      socket?.off(ServerSocketEvnets.GAME_ROOM_QUESTION_READY, updateGameQuestion);
+      //clearInterval(timer);
+    }
+  }, [socket]);
 
   //TODO:update the current question status
   const handleNextQuestion = () => {
@@ -198,7 +205,7 @@ function Game() {
             </div>
             {
               (questionState == 'Pending' || questionState == 'Idle') && !error ?
-                <Loader /> :
+                <><Loader /> <p className="text-red-400">Qestion are generating Please wait</p></> :
                 gameQuestion !== null ? gameQuestion.length !== 0 &&
                   <>
                     <div className="bg-gray-900/[0.5] py-4 border border-gray-700 rounded-lg text-center">
@@ -218,12 +225,12 @@ function Game() {
             {/* {
               gameQuestion !== null ? gameQuestion.length != 0 &&
               <>
-                
+
               </>
 
                 :
-                questionState == 'Pending' ? <Loader /> : 
-              
+                questionState == 'Pending' ? <Loader /> :
+
             } */}
 
 

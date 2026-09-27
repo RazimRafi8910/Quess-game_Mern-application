@@ -1,5 +1,5 @@
 import { ServerSocketEvents } from "../utils/constants.js";
-import {getCookieByName} from "../utils/cookieExtract.js";
+import { getCookieByName } from "../utils/cookieExtract.js";
 import jwt from "jsonwebtoken";
 
 export const validateSocketRoom = (socket, gameId) => {
@@ -18,7 +18,7 @@ export const startGameTimer = (game, io) => {
     return
 }
 
-export const handleAuthMiddleware = (socket,next)=>{
+export const handleAuthMiddleware = (socket, next) => {
     const cookie = socket.handshake.headers.cookie;
     const token = getCookieByName(cookie, 'token');
 
@@ -26,8 +26,8 @@ export const handleAuthMiddleware = (socket,next)=>{
         next(new Error("Un-authorized handshake. Token is missing"));
     }
 
-    const player = jwt.verify(token,process.env.JWT_KEY);
-    if(!player){
+    const player = jwt.verify(token, process.env.JWT_KEY);
+    if (!player) {
         next(new Error("Un-authorized user"));
     }
 
@@ -41,6 +41,9 @@ export const sendSocketError = (io, socketId, message, redirect = false) => {
 
 
 export const asyncWithGameMiddleware = (io, socket, gameLobby, handler) => {
+    // function that wrap a the socker event handler function 
+    // it validates the gameId and get the game from the gameLobby and then pass it to the handler function
+    // it is async because the gameLobby.getGameState is async
     return async (data, callback) => {
         const gameId = data?.gameId;
 
@@ -50,7 +53,7 @@ export const asyncWithGameMiddleware = (io, socket, gameLobby, handler) => {
             return socket.emit(ServerSocketEvents.SOCKET_ERROR, { message });
         }
 
-        const game = gameLobby.getGameState(gameId);
+        const game = await gameLobby.getGameState(gameId);
 
         if (!game) {
             const message = "Game not found";
@@ -69,14 +72,14 @@ export const asyncWithGameMiddleware = (io, socket, gameLobby, handler) => {
 
 
 export const withGameMiddleware = (io, socket, gameLobby, handler) => {
-    return (data, callback) => {
+    return async (data, callback) => {
         const gameId = data?.gameId;
         if (!gameId) {
             const message = "Missing gameId";
             if (typeof callback === 'function') return callback({ status: false, message });
             return socket.emit(ServerSocketEvents.SOCKET_ERROR, { message });
         }
-        const game = gameLobby.getGameState(gameId);
+        const game = await gameLobby.getGameState(gameId);
         if (!game) {
             const message = "Game not found";
             if (typeof callback === 'function') return callback({ status: false, message });

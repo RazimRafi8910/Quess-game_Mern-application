@@ -27,6 +27,7 @@ export const login = async (req, res, next) => {
         const authState = await bcrypt.compare(password, user.password);
 
         if (!authState) {
+            console.log(`[auth controller] invalid password ${req.ip}, ${email}`)
             return res.status(401).json({ success: false, error: true, message: "Invalid Email or Password" });
         }
 
@@ -130,6 +131,7 @@ export const getUserDetails = async (req, res, next) => {
             return res.status(401).json({ auth: false, message: "User not found" });
         }
         let responseUser = {
+            permission: userDetails.permission,
             gameHistory: playerGameHistory,
             username: userDetails.username,
             email: userDetails.email,

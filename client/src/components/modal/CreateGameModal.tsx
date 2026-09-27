@@ -85,7 +85,6 @@ function CreateGameModal({ isOpen, setModal }: ModalProps) {
 
   useEffect(() => {
     if (!isOpen) return;
-    console.log(user)
     const handleCloseOnMouse = (e: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
         handleCloseModal()

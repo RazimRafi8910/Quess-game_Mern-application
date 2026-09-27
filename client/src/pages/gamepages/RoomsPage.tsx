@@ -8,6 +8,8 @@ import Loader from "../../components/Loader";
 import { useOutletContext } from "react-router-dom";
 import { Socket } from "socket.io-client";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store/store";
 
 function RoomsPage() {
   const searchRef = useRef<HTMLInputElement>(null);
@@ -16,6 +18,7 @@ function RoomsPage() {
   const { error, data, loading, getFetch } = useFetch<[GameRoomType]>('/game/rooms');
   const [currentLobby, setCurrentLobby] = useState<GameRoomType[] | null>(null);
   const socket = useOutletContext<Socket | null>()
+  const user = useSelector((state: RootState) => state.userReducer.user);
   const navigate = useNavigate()
 
   useEffect(() => {
